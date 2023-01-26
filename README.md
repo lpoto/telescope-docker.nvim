@@ -5,6 +5,9 @@ that allows managing containers, images and docker-compose files from a telescop
 
 ## Demo
 
+https://user-images.githubusercontent.com/67372390/214747403-4904a315-91f2-4205-a00d-cba793c49247.mp4
+
+
 ## Installation
 
 ### [Lazy](https://github.com/folke/lazy.nvim)
