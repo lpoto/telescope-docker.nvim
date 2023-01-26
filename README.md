@@ -6,7 +6,7 @@ that allows managing containers, images and docker-compose files from a telescop
 ## Demo
 
 https://user-images.githubusercontent.com/67372390/214747403-4904a315-91f2-4205-a00d-cba793c49247.mp4
-
+> _NOTE_  The demo uses [vim-floaterm](https://github.com/voldikss/vim-floaterm), as mentioned in the [Setup and usage](#setup-and-usage) below.
 
 ## Installation
 
