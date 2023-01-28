@@ -19,7 +19,7 @@ function finder.images_finder(images_tbl)
     entry_maker = function(entry)
       return {
         value = entry,
-        ordinal = entry.Tag,
+        ordinal = entry:name(),
         display = function(entry2)
           return get_image_display(entry2.value)
         end,
@@ -35,7 +35,7 @@ get_image_display = function(image)
     items = { {} },
   }
   return displayer {
-    image.Tag,
+    image:name(),
   }
 end
 
