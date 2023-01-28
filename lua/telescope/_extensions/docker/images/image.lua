@@ -42,4 +42,8 @@ function Image:represent()
   return lines
 end
 
+function Image:name()
+  return self.Repository .. ":" .. self.Tag
+end
+
 return Image
