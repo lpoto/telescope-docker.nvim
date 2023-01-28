@@ -1,4 +1,3 @@
-local containers = require "telescope._extensions.docker.containers"
 local finders = require "telescope.finders"
 local entry_display = require "telescope.pickers.entry_display"
 
@@ -8,12 +7,9 @@ local get_container_display
 
 ---Create a telescope finder for the currently available containers.
 ---
+---@param containers_tbl Container[]
 ---@return table?: a telescope finder
 function finder.containers_finder(containers_tbl)
-  if not containers_tbl then
-    containers_tbl = containers.get_containers() or {}
-  end
-
   return finders.new_table {
     results = containers_tbl,
     entry_maker = function(entry)

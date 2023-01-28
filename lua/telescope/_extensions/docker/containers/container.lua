@@ -12,6 +12,7 @@
 ---@field Size string
 ---@field Ports string
 ---@field LocalVolumes string
+---@field env table?
 local Container = {}
 Container.__index = Container
 
@@ -44,6 +45,13 @@ function Container:represent()
   table.insert(lines, "Networks: " .. self.Networks)
   table.insert(lines, "LocalVolumes: " .. self.LocalVolumes)
   table.insert(lines, "Labels: " .. self.Labels)
+
+  if self.env then
+    table.insert(lines, "")
+    for k, v in pairs(self.env) do
+      table.insert(lines, "# " .. k .. ": " .. v)
+    end
+  end
   return lines
 end
 

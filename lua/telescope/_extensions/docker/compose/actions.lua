@@ -8,7 +8,7 @@ local actions = {}
 ---
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 function actions.select_compose_file(prompt_bufnr)
-  local selection = action_state.get_selected_entry(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
   local file = selection.value
   compose.select_compose_file(file)
 end

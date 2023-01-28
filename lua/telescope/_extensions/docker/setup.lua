@@ -14,8 +14,12 @@ function setup.setup(o)
     return
   end
 
-  if o.init_term ~= nil and type(o.init_term) ~= "function" then
-    util.warn "'init_term' should be a function"
+  if
+    o.init_term ~= nil
+    and type(o.init_term) ~= "function"
+    and type(o.init_term) ~= "string"
+  then
+    util.warn "'init_term' should be a string or a function"
     o.init_term = nil
   end
   if o.log_level ~= nil and type(o.log_level) ~= "number" then

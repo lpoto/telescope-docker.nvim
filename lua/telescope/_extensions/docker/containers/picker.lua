@@ -1,15 +1,28 @@
 local util = require "telescope._extensions.docker.util"
-local containers = require "telescope._extensions.docker.containers"
 local finder = require "telescope._extensions.docker.containers.finder"
 local previewer = require "telescope._extensions.docker.containers.previewer"
 local mappings = require "telescope._extensions.docker.containers.mappings"
+local State = require "telescope._extensions.docker.util.docker_state"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
 
 local available_containers_telescope_picker = function(options)
   util.info "Fetching containers ..."
-  containers.get_containers(function(containers_tbl)
+
+  if options.env ~= nil and type(options.env) ~= "table" then
+    util.warn "env must be a table"
+    return
+  end
+
+  options = options or {}
+  local env = options.env or {}
+  if options.host then
+    env.DOCKER_HOST = options.host
+  end
+  local docker_state = State:new(options.env)
+
+  docker_state:fetch_containers(function(containers_tbl)
     containers_tbl = containers_tbl or {}
     if not next(containers_tbl) then
       util.warn "No containers were found"
@@ -24,23 +37,20 @@ local available_containers_telescope_picker = function(options)
       return
     end
 
-    local function containers_picker(opts)
-      opts = opts or {}
-      local picker = pickers.new(opts, {
-        prompt_title = "Containers",
-        --results_title = " Tasks",
-        finder = containers_finder,
-        sorter = conf.generic_sorter(opts),
-        previewer = previewer.container_previewer(),
-        dynamic_preview_title = true,
-        selection_strategy = "row",
-        scroll_strategy = "cycle",
-        attach_mappings = mappings.attach_mappings,
-      })
-      picker:find()
-    end
+    local picker = pickers.new(options, {
+      prompt_title = "Containers",
+      finder = containers_finder,
+      sorter = conf.generic_sorter(options),
+      previewer = previewer.container_previewer(),
+      dynamic_preview_title = true,
+      selection_strategy = "row",
+      scroll_strategy = "cycle",
+      attach_mappings = mappings.attach_mappings,
+    })
 
-    containers_picker(options)
+    picker.docker_state = docker_state
+
+    picker:find()
   end)
 end
 

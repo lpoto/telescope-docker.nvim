@@ -1,7 +1,6 @@
 local enum = require "telescope._extensions.docker.enum"
 local util = require "telescope._extensions.docker.util"
 local popup = require "telescope._extensions.docker.util.popup"
-local images = require "telescope._extensions.docker.images"
 local action_state = require "telescope.actions.state"
 local finder = require "telescope._extensions.docker.images.finder"
 local telescope_actions = require "telescope.actions"
@@ -15,10 +14,7 @@ local select_image
 ---
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 function actions.select_image(prompt_bufnr)
-  local selection = action_state.get_selected_entry(prompt_bufnr)
-  ---@type Image
-  local image = selection.value
-  return select_image(image, prompt_bufnr, {
+  return select_image(prompt_bufnr, {
     enum.IMAGES.DELETE,
     enum.IMAGES.HISTORY,
   })
@@ -28,7 +24,11 @@ end
 ---
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 function actions.refresh_picker(prompt_bufnr)
-  images.get_images(function(images_tbl)
+  local picker = actions.get_picker(prompt_bufnr)
+  if not picker or not picker.docker_state then
+    return
+  end
+  picker.docker_state:fetch_images(function(images_tbl)
     if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
       prompt_bufnr = vim.api.nvim_get_current_buf()
     end
@@ -68,17 +68,61 @@ function actions.close_picker(prompt_bufnr)
   end)
 end
 
----@param image Image
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.delete(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local image = selection.value
+  local args = { "image", "rm", image.ID }
+  util.info("Deleting image:", image.ID)
+  picker.docker_state:docker_job(image, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Image", image.ID, "deleted")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.history(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local image = selection.value
+  local args = { "image", "history", image.ID }
+  util.info("Fetching history for image:", image.ID)
+  picker.docker_state:docker_command(args)
+end
+
+function actions.get_picker(prompt_bufnr)
+  if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
+    prompt_bufnr = vim.api.nvim_get_current_buf()
+  end
+  local p = action_state.get_current_picker(prompt_bufnr)
+  return p
+end
+
 ---@param prompt_bufnr number
 ---@param options string[]
-function select_image(image, prompt_bufnr, options)
+function select_image(prompt_bufnr, options)
   popup.open(options, function(choice)
     if choice == enum.IMAGES.DELETE then
-      images.delete(image, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.delete(prompt_bufnr)
     elseif choice == enum.IMAGES.HISTORY then
-      images.history(image)
+      actions.history(prompt_bufnr)
     end
   end)
 end
