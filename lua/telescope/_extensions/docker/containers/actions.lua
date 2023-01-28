@@ -1,7 +1,7 @@
 local enum = require "telescope._extensions.docker.enum"
 local util = require "telescope._extensions.docker.util"
+local setup = require "telescope._extensions.docker.setup"
 local popup = require "telescope._extensions.docker.util.popup"
-local containers = require "telescope._extensions.docker.containers"
 local action_state = require "telescope.actions.state"
 local finder = require "telescope._extensions.docker.containers.finder"
 local telescope_actions = require "telescope.actions"
@@ -15,18 +15,21 @@ local select_container
 ---
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 function actions.select_container(prompt_bufnr)
-  local selection = action_state.get_selected_entry(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  if not selection or not selection.value then
+    return
+  end
   ---@type Container
   local container = selection.value
   if container.State == "exited" then
-    return select_container(container, prompt_bufnr, {
+    return select_container(prompt_bufnr, {
       enum.CONTAINERS.START,
       enum.CONTAINERS.DELETE,
       enum.CONTAINERS.LOGS,
       enum.CONTAINERS.RENAME,
     })
   elseif container.State == "running" then
-    return select_container(container, prompt_bufnr, {
+    return select_container(prompt_bufnr, {
       enum.CONTAINERS.ATTACH,
       enum.CONTAINERS.EXEC,
       enum.CONTAINERS.STOP,
@@ -37,7 +40,7 @@ function actions.select_container(prompt_bufnr)
       enum.CONTAINERS.RENAME,
     })
   elseif container.State == "paused" then
-    return select_container(container, prompt_bufnr, {
+    return select_container(prompt_bufnr, {
       enum.CONTAINERS.UNPAUSE,
       enum.CONTAINERS.STOP,
       enum.CONTAINERS.KILL,
@@ -48,11 +51,286 @@ function actions.select_container(prompt_bufnr)
   end
 end
 
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.start(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State ~= "exited" then
+    util.warn "Container is already running"
+    return
+  end
+  util.info("Starting container:", container.ID)
+  local args = { "start", container.ID }
+  picker.docker_state:docker_job(container, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Container", container.ID, "started")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.pause(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State ~= "running" then
+    util.warn "Container is not running"
+    return
+  end
+  local args = { "pause", container.ID }
+  util.info("Pausing container:", container.ID)
+  picker.docker_state:docker_job(container, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Container", container.ID, "paused")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.unpause(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State ~= "paused" then
+    util.warn "Container is not paused"
+    return
+  end
+  local args = { "unpause", container.ID }
+  util.info("Unpausing container:", container.ID)
+  picker.docker_state:docker_job(container, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Container", container.ID, "unpaused")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.stop(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State == "exited" then
+    util.warn "Container is not running"
+    return
+  end
+  local args = { "stop", container.ID }
+  util.info("Stopping container:", container.ID)
+  picker.docker_state:docker_job(container, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Container", container.ID, "stopped")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.kill(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State == "exited" then
+    util.warn "Container is not running"
+    return
+  end
+  local args = { "kill", container.ID }
+  util.info("Killing container:", container.ID)
+  picker.docker_state:docker_job(container, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Container", container.ID, "killed")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.delete(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State ~= "exited" then
+    util.warn "Container is not exited"
+    return
+  end
+  local args = { "delete", container.ID }
+  util.info("Deleting container:", container.ID)
+  picker.docker_state:docker_job(container, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Container", container.ID, "deleted")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.rename(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  local binary = setup.get_option "binary" or "docker"
+  local cmd = binary .. " rename " .. container.ID .. " "
+  local rename = vim.fn.input(cmd)
+  local args = {
+    "rename",
+    container.ID,
+    unpack(vim.split(rename, " ")),
+  }
+  util.info("Renaming container:", container.ID)
+  picker.docker_state:docker_job(container, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Container", container.ID, "renamed")
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.attach(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State ~= "running" then
+    util.warn "Container is not running"
+    return
+  end
+  util.info("Attaching to container:", container.ID)
+  picker.docker_state:docker_command { "attach", container.ID }
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.logs(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  util.info("Fetching logs for container:", container.ID)
+  picker.docker_state:docker_command { "logs", container.ID }
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.stats(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State == "exited" then
+    util.warn "Container is exited"
+    return
+  end
+  util.info("Fetching stats for container:", container.ID)
+  picker.docker_state:docker_command { "stats", container.ID }
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.exec(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  local container = selection.value
+  if container.State ~= "running" then
+    util.warn "Container is not running"
+    return
+  end
+  local binary = setup.get_option "binary" or "docker"
+  local command = binary .. " exec -it " .. container.ID .. " "
+  local exec = vim.fn.input(command)
+  if not exec or exec:len() == 0 then
+    util.warn "Invalid command"
+    return
+  end
+  local args = {
+    "exec",
+    "-it",
+    container.ID,
+    unpack(vim.split(exec, " ")),
+  }
+  util.info("Executing in container:", container.ID)
+  picker.docker_state:docker_command(args)
+end
+
 ---Asynchronously refresh the containers picker.
 ---
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 function actions.refresh_picker(prompt_bufnr)
-  containers.get_containers(function(containers_tbl)
+  local picker = actions.get_picker(prompt_bufnr)
+  if not picker or not picker.docker_state then
+    return
+  end
+  picker.docker_state:fetch_containers(function(containers_tbl)
     if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
       prompt_bufnr = vim.api.nvim_get_current_buf()
     end
@@ -93,47 +371,40 @@ function actions.close_picker(prompt_bufnr)
   end)
 end
 
----@param container Container
+function actions.get_picker(prompt_bufnr)
+  if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
+    prompt_bufnr = vim.api.nvim_get_current_buf()
+  end
+  local p = action_state.get_current_picker(prompt_bufnr)
+  return p
+end
+
 ---@param prompt_bufnr number
 ---@param options string[]
-function select_container(container, prompt_bufnr, options)
+function select_container(prompt_bufnr, options)
   popup.open(options, function(choice)
     if choice == enum.CONTAINERS.START then
-      containers.start(container, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.start(prompt_bufnr)
     elseif choice == enum.CONTAINERS.STOP then
-      containers.stop(container, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.stop(prompt_bufnr)
     elseif choice == enum.CONTAINERS.KILL then
-      containers.kill(container, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.kill(prompt_bufnr)
     elseif choice == enum.CONTAINERS.DELETE then
-      containers.delete(container, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.delete(prompt_bufnr)
     elseif choice == enum.CONTAINERS.ATTACH then
-      containers.attach(container)
+      actions.attach(prompt_bufnr)
     elseif choice == enum.CONTAINERS.EXEC then
-      containers.exec(container)
+      actions.exec(prompt_bufnr)
     elseif choice == enum.CONTAINERS.LOGS then
-      containers.logs(container)
+      actions.logs(prompt_bufnr)
     elseif choice == enum.CONTAINERS.STATS then
-      containers.stats(container)
+      actions.stats(prompt_bufnr)
     elseif choice == enum.CONTAINERS.RENAME then
-      containers.rename(container, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.rename(prompt_bufnr)
     elseif choice == enum.CONTAINERS.PAUSE then
-      containers.pause(container, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.pause(prompt_bufnr)
     elseif choice == enum.CONTAINERS.UNPAUSE then
-      containers.unpause(container, function()
-        actions.refresh_picker(prompt_bufnr)
-      end)
+      actions.unpause(prompt_bufnr)
     end
   end)
 end
