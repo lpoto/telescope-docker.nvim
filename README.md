@@ -5,7 +5,7 @@ that allows managing containers, images and docker-compose files from a telescop
 
 ## Demo
 
-https://user-images.githubusercontent.com/67372390/214747403-4904a315-91f2-4205-a00d-cba793c49247.mp4
+https://user-images.githubusercontent.com/67372390/215296650-f453a90c-f0d1-462a-9fe3-12c6d5f64cb6.mp4
 
 ## Installation
 
