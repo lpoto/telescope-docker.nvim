@@ -1,7 +1,7 @@
 local enum = {}
 
-enum.TITLE = "Telescope Containers"
-enum.CONTAINERS_AUGROUP = "TelescopeContainers"
+enum.TITLE = "Telescope Docker"
+enum.CONTAINERS_AUGROUP = "TelescopeDocker"
 
 enum.TELESCOPE_PROMPT_FILETYPE = "TelescopePrompt"
 
