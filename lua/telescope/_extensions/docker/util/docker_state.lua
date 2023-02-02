@@ -11,6 +11,7 @@ local job_id
 ---@field binary string: Executable docker binary
 local State = {
   binary = "docker",
+  locked = false,
   env = nil,
 }
 State.__index = State
@@ -54,44 +55,44 @@ function State:docker_command(cmd_args)
     util.warn("Invalid docker arguments: " .. vim.inspect(cmd_args))
     return
   end
-  if
-    vim.api.nvim_buf_get_option(0, "filetype")
-    == enum.TELESCOPE_PROMPT_FILETYPE
-  then
-    -- NOTE: close telescope popup if open
-    vim.api.nvim_buf_delete(0, { force = true })
+  if self.locked then
+    util.warn "Docker state is locked, please wait a moment"
+    return
   end
-
-  local cmd = { self.binary, unpack(cmd_args) }
-
-  local init_term = setup.get_option "init_term"
-  if type(init_term) == "function" then
-    local ok, e = pcall(init_term, cmd, self:get_env())
-    if not ok then
-      util.warn("Failed to initialize terminal: ", e)
+  self.locked = true
+  local ok, e = pcall(function()
+    if
+      vim.api.nvim_buf_get_option(0, "filetype")
+      == enum.TELESCOPE_PROMPT_FILETYPE
+    then
+      -- NOTE: close telescope popup if open
+      vim.api.nvim_buf_delete(0, { force = true })
     end
-    return
-  elseif
-    type(init_term) ~= "string"
-    or (not init_term:match "tab" and not init_term:match "split")
-  then
-    init_term = "tabnew"
-  end
-  local ok, e = pcall(vim.api.nvim_exec, init_term, false)
+
+    local cmd = { self.binary, unpack(cmd_args) }
+
+    local init_term = setup.get_option "init_term"
+    if type(init_term) == "function" then
+      init_term(cmd, self:get_env())
+      return
+    elseif
+      type(init_term) ~= "string"
+      or (not init_term:match "tab" and not init_term:match "split")
+    then
+      init_term = "tabnew"
+    end
+    vim.api.nvim_exec(init_term, false)
+    local opts = { detach = false }
+    local env = self:get_env()
+    if env then
+      opts.env = env
+    end
+    vim.fn.termopen(cmd, opts)
+  end)
   if not ok then
-    util.warn("Failed to initialize terminal: ", e)
-    return
+    util.warn("Failed to execute docker command:", e)
   end
-  local opts = { detach = false }
-  local env = self:get_env()
-  if env then
-    opts.env = env
-  end
-  ok, e = pcall(vim.fn.termopen, cmd, opts)
-  if not ok then
-    util.warn("Failed to initialize terminal: ", e)
-    return
-  end
+  self.locked = false
 end
 
 function State:docker_job(container, cmd_args, callback)
@@ -99,87 +100,113 @@ function State:docker_job(container, cmd_args, callback)
     util.warn("Invalid docker arguments: " .. vim.inspect(cmd_args))
     return
   end
-  local cmd = {
-    self.binary,
-    unpack(cmd_args),
-  }
-  local error = {}
-  local opts = {
-    detach = false,
-    on_stderr = function(_, data)
-      for _, d in ipairs(data) do
-        if d:len() > 0 then
-          table.insert(error, d)
-        end
-      end
-    end,
-    on_exit = function(_, code)
-      if code ~= 0 then
-        if #error > 0 then
-          util.warn(table.concat(error, "\n"))
-        else
-          util.warn("Docker job - exited with code: " .. vim.inspect(code))
-        end
-        return
-      end
-      if type(callback) == "function" then
-        callback(container)
-      end
-    end,
-  }
-  local env = self:get_env()
-  if env then
-    opts.env = env
+  if self.locked then
+    util.warn "Docker state is locked, please wait a moment"
+    return
   end
-  vim.fn.jobstart(cmd, opts)
+  self.locked = true
+  local ok, e = pcall(function()
+    local cmd = {
+      self.binary,
+      unpack(cmd_args),
+    }
+    local error = {}
+    local opts = {
+      detach = false,
+      on_stderr = function(_, data)
+        for _, d in ipairs(data) do
+          if d:len() > 0 then
+            table.insert(error, d)
+          end
+        end
+      end,
+      on_exit = function(_, code)
+        self.locked = false
+        if code ~= 0 then
+          if #error > 0 then
+            util.warn(table.concat(error, "\n"))
+          else
+            util.warn("Docker job - exited with code: " .. vim.inspect(code))
+          end
+          return
+        end
+        if type(callback) == "function" then
+          callback(container)
+        end
+      end,
+    }
+    local env = self:get_env()
+    if env then
+      opts.env = env
+    end
+    vim.fn.jobstart(cmd, opts)
+  end)
+  if not ok then
+    util.warn(e)
+    self.locked = false
+  end
 end
 
 ---@param callback function?
 ---@return Container[]
 function State:fetch_containers(callback)
-  local cmd = {
-    self.binary,
-    "ps",
-    "-a",
-    "--format='{{json . }}'",
-  }
+  if self.locked then
+    util.warn "Docker state is locked, please wait a moment"
+    return {}
+  end
+  self.locked = true
+  local ok, containers = pcall(function()
+    local cmd = {
+      self.binary,
+      "ps",
+      "-a",
+      "--format='{{json . }}'",
+    }
 
-  local containers = {}
+    local containers = {}
 
-  local opts = {
-    detach = false,
-    on_stdout = function(_, data)
-      local ok, err = pcall(function()
-        for _, json in ipairs(data) do
-          if json:len() > 0 then
-            json = string.sub(json, 2, #json - 1)
-            local container = Container:new(json)
-            local env = self:get_env()
-            container.env = env
-            table.insert(containers, container)
+    local opts = {
+      detach = false,
+      on_stdout = function(_, data)
+        local ok, err = pcall(function()
+          for _, json in ipairs(data) do
+            if json:len() > 0 then
+              json = string.sub(json, 2, #json - 1)
+              local container = Container:new(json)
+              local env = self:get_env()
+              container.env = env
+              table.insert(containers, container)
+            end
           end
+        end)
+        if not ok then
+          util.warn("Error when decoding container: ", err)
         end
-      end)
-      if not ok then
-        util.warn("Error when decoding container: ", err)
-      end
-    end,
-    on_exit = function()
-      if callback then
-        callback(containers)
-      end
-    end,
-  }
-  local env = self:get_env()
-  if env then
-    opts.env = env
-  end
-  if job_id then
-    pcall(vim.fn.jobstop, job_id)
-  end
-  job_id = vim.fn.jobstart(cmd, opts)
-  if not callback then
-    vim.fn.jobwait({ job_id }, 2000)
+      end,
+      on_exit = function()
+        self.locked = false
+        if callback then
+          callback(containers)
+        end
+      end,
+    }
+    local env = self:get_env()
+    if env then
+      opts.env = env
+    end
+    if job_id then
+      pcall(vim.fn.jobstop, job_id)
+    end
+    job_id = vim.fn.jobstart(cmd, opts)
+    if not callback then
+      vim.fn.jobwait({ job_id }, 2000)
+    end
+    return containers
+  end)
+  if not ok then
+    util.warn(containers)
+    self.locked = false
+    return {}
   end
   return containers
 end
@@ -187,47 +214,61 @@ end
 ---@param callback function?
 ---@return Image[]
 function State:fetch_images(callback)
-  local cmd = {
-    self.binary,
-    "image",
-    "ls",
-    "-a",
-    "--format='{{json . }}'",
-  }
-  local images = {}
+  if self.locked then
+    util.warn "Docker state is locked, please wait a moment"
+    return {}
+  end
+  self.locked = true
+  local ok, images = pcall(function()
+    local cmd = {
+      self.binary,
+      "image",
+      "ls",
+      "-a",
+      "--format='{{json . }}'",
+    }
+    local images = {}
 
-  local opts = {
-    detach = false,
-    on_stdout = function(_, data)
-      local ok, err = pcall(function()
-        for _, json in ipairs(data) do
-          if json:len() > 0 then
-            json = string.sub(json, 2, #json - 1)
-            local image = Image:new(json)
-            table.insert(images, image)
+    local opts = {
+      detach = false,
+      on_stdout = function(_, data)
+        local ok, err = pcall(function()
+          for _, json in ipairs(data) do
+            if json:len() > 0 then
+              json = string.sub(json, 2, #json - 1)
+              local image = Image:new(json)
+              table.insert(images, image)
+            end
           end
+        end)
+        if not ok then
+          util.warn("Error when decoding image: ", err)
         end
-      end)
-      if not ok then
-        util.warn("Error when decoding image: ", err)
-      end
-    end,
-    on_exit = function()
-      if callback then
-        callback(images)
-      end
-    end,
-  }
-  local env = self:get_env()
-  if env then
-    opts.env = env
-  end
-  if job_id then
-    pcall(vim.fn.jobstop, job_id)
-  end
-  job_id = vim.fn.jobstart(cmd, opts)
-  if not callback then
-    vim.fn.jobwait({ job_id }, 2000)
+      end,
+      on_exit = function()
+        self.locked = false
+        if callback then
+          callback(images)
+        end
+      end,
+    }
+    local env = self:get_env()
+    if env then
+      opts.env = env
+    end
+    if job_id then
+      pcall(vim.fn.jobstop, job_id)
+    end
+    job_id = vim.fn.jobstart(cmd, opts)
+    if not callback then
+      vim.fn.jobwait({ job_id }, 2000)
+    end
+    return images
+  end)
+  if not ok then
+    util.warn(images)
+    self.locked = false
+    return {}
   end
   return images
 end

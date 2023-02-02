@@ -193,7 +193,7 @@ function actions.delete(prompt_bufnr)
     util.warn "Container is not exited"
     return
   end
-  local args = { "delete", container.ID }
+  local args = { "rm", container.ID }
   util.info("Deleting container:", container.ID)
   picker.docker_state:docker_job(container, args, function()
     actions.refresh_picker(prompt_bufnr)
