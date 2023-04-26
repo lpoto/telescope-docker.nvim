@@ -103,7 +103,6 @@ function actions.history(prompt_bufnr)
   end
   local image = selection.value
   local args = { "image", "history", image.ID }
-  util.info("Fetching history for image:", image.ID)
   picker.docker_state:docker_command(args)
 end
 

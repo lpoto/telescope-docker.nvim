@@ -3,6 +3,7 @@ local enum = require "telescope._extensions.docker.enum"
 local setup = require "telescope._extensions.docker.setup"
 local Container = require "telescope._extensions.docker.containers.container"
 local Image = require "telescope._extensions.docker.images.image"
+local telescope_actions = require "telescope.actions"
 
 local job_id
 
@@ -65,8 +66,8 @@ function State:docker_command(cmd_args)
       vim.api.nvim_buf_get_option(0, "filetype")
       == enum.TELESCOPE_PROMPT_FILETYPE
     then
-      -- NOTE: close telescope popup if open
-      vim.api.nvim_buf_delete(0, { force = true })
+      local bufnr = vim.api.nvim_get_current_buf()
+      pcall(telescope_actions.close, bufnr)
     end
 
     local cmd = { self.binary, unpack(cmd_args) }

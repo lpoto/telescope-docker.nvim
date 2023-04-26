@@ -46,16 +46,21 @@ function create_window(bufnr, height, width)
 end
 
 function handle_window(bufnr, winid, selection_callback)
-  vim.api.nvim_create_autocmd({ "BufEnter", "BufLeave", "FocusLost" }, {
+  vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost" }, {
     buffer = bufnr,
+    once = true,
     callback = function()
-      vim.api.nvim_win_close(winid, true)
-      vim.api.nvim_buf_delete(bufnr, { force = true })
+      pcall(function()
+        vim.api.nvim_win_close(winid, true)
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end)
     end,
   })
   for _, k in ipairs { "<Esc>", "q" } do
     vim.keymap.set("", k, function()
-      vim.api.nvim_exec_autocmds("FocusLost", { buffer = bufnr })
+      pcall(function()
+        vim.api.nvim_exec_autocmds("FocusLost", { buffer = bufnr })
+      end)
     end, { buffer = bufnr })
   end
 
