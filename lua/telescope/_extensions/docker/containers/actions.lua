@@ -246,7 +246,6 @@ function actions.attach(prompt_bufnr)
     util.warn "Container is not running"
     return
   end
-  util.info("Attaching to container:", container.ID)
   picker.docker_state:docker_command { "attach", container.ID }
 end
 
@@ -263,7 +262,6 @@ function actions.logs(prompt_bufnr)
     return
   end
   local container = selection.value
-  util.info("Fetching logs for container:", container.ID)
   picker.docker_state:docker_command { "logs", container.ID }
 end
 
@@ -284,7 +282,6 @@ function actions.stats(prompt_bufnr)
     util.warn "Container is exited"
     return
   end
-  util.info("Fetching stats for container:", container.ID)
   picker.docker_state:docker_command { "stats", container.ID }
 end
 
@@ -318,7 +315,6 @@ function actions.exec(prompt_bufnr)
     container.ID,
     unpack(vim.split(exec, " ")),
   }
-  util.info("Executing in container:", container.ID)
   picker.docker_state:docker_command(args)
 end
 

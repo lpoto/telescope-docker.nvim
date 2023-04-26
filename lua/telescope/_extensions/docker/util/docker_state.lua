@@ -67,7 +67,7 @@ function State:docker_command(cmd_args)
       == enum.TELESCOPE_PROMPT_FILETYPE
     then
       local bufnr = vim.api.nvim_get_current_buf()
-      telescope_actions.close(bufnr)
+      pcall(telescope_actions.close, bufnr)
     end
 
     local cmd = { self.binary, unpack(cmd_args) }
