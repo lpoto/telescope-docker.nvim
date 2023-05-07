@@ -5,6 +5,7 @@ local mappings = {}
 
 mappings.keys = {
   ["<CR>"] = actions.select_compose_file,
+  ["<C-a>"] = actions.select_compose_file,
   ["<C-e>"] = actions.edit_compose_file,
   ["e"] = actions.edit_compose_file,
   ["<C-q>"] = function()

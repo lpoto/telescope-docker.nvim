@@ -68,10 +68,14 @@ function State:docker_command(opts)
     return
   end
   if opts.ask_for_input then
-    local input = vim.fn.input(
-      self.binary .. " " .. table.concat(opts.args, " ") .. " ",
-      ""
-    )
+    local input = vim.fn.input {
+      prompt = self.binary .. " " .. table.concat(opts.args, " ") .. " ",
+      default = "",
+      cancelreturn = false,
+    }
+    if type(input) ~= "string" then
+      return
+    end
     for _, arg in ipairs(vim.split(input, " ")) do
       if arg:len() > 0 then
         table.insert(opts.args, arg)
@@ -139,10 +143,14 @@ function State:docker_job(opts)
   end
 
   if opts.ask_for_input then
-    local input = vim.fn.input(
-      self.binary .. " " .. table.concat(opts.args, " ") .. " ",
-      ""
-    )
+    local input = vim.fn.input {
+      prompt = self.binary .. " " .. table.concat(opts.args, " ") .. " ",
+      default = "",
+      cancelreturn = false,
+    }
+    if type(input) ~= "string" then
+      return
+    end
     for _, arg in ipairs(vim.split(input, " ")) do
       if arg:len() > 0 then
         table.insert(opts.args, arg)

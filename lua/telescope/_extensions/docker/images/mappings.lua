@@ -5,6 +5,7 @@ local mappings = {}
 
 mappings.keys = {
   ["<CR>"] = actions.select_image,
+  ["<C-a>"] = actions.select_image,
   ["<C-q>"] = function() end,
 }
 

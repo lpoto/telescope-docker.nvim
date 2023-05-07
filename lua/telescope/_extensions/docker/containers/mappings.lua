@@ -5,6 +5,7 @@ local mappings = {}
 
 mappings.keys = {
   ["<CR>"] = actions.select_container,
+  ["<C-a>"] = actions.select_container,
   ["<C-q>"] = function() end,
 }
 
