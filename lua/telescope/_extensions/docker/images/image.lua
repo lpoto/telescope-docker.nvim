@@ -1,3 +1,5 @@
+local util = require "telescope._extensions.docker.util"
+
 ---@class Image
 ---@field ID string
 ---@field Tag string
@@ -15,6 +17,7 @@ Image.__index = Image
 ---@param json string: A json string
 ---@return Image
 function Image:new(json)
+  json = util.preprocess_json(json)
   local container
   if vim.json.decode then
     container = vim.json.decode(json)
