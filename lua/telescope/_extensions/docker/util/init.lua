@@ -68,6 +68,23 @@ function notify(lvl, ...)
   end)
 end
 
+function util.create_preview_buffer(lines)
+  local ok, b = pcall(function()
+    local buf = vim.api.nvim_create_buf(false, true)
+    pcall(vim.api.nvim_buf_set_lines, buf, 0, -1, false, lines)
+    pcall(vim.api.nvim_buf_set_option, buf, "buftype", "nofile")
+    pcall(vim.api.nvim_buf_set_option, buf, "bufhidden", "wipe")
+    pcall(vim.api.nvim_buf_set_option, buf, "syntax", "yaml")
+    pcall(vim.api.nvim_buf_set_option, buf, "filetype", "yaml")
+    return buf
+  end)
+  if not ok then
+    util.warn(b)
+    return -1
+  end
+  return b
+end
+
 --- Preprocess json string and remove double
 --- quotations and special quotations that may
 --- be outputted by docker on macOS
