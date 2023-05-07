@@ -74,6 +74,7 @@ require("telescope").extensions.docker.containers(--[[opts...]])
 ## Connecting to a remote docker host
 
 A table of environment variables may be passed to the pickers:
+
 ```lua
 require("telescope").extensions.docker.containers({
   env = {
@@ -83,12 +84,13 @@ require("telescope").extensions.docker.containers({
   -- ...
 })
 
--- NOTE: docker env variables may also be added as a global variable,
--- but will be overriden by the env passes to the function itself
+-- NOTE: docker env variables may also be added as a global vim variable,
+-- but will be overriden by the env passed to the function itself
 vim.g.docker_env = {
   DOCKER_HOST = "ssh://ec2-user@ec2-......amazonaws.com",
 }
 ```
+
 > In the above example the containers would be then fetched
 > from the provided docker host.
 > The same works for fetching images.
