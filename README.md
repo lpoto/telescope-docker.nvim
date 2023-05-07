@@ -84,6 +84,9 @@ require("telescope").extensions.docker.containers({
   -- ...
 })
 
+-- NOTE: the host variable could also be provided in the telescope command
+:Telescope docker host=ssh...
+
 -- NOTE: docker env variables may also be added as a global vim variable,
 -- but will be overriden by the env passed to the function itself
 vim.g.docker_env = {
