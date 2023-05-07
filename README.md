@@ -7,6 +7,9 @@ that allows managing containers, images and docker-compose files from a telescop
 
 https://user-images.githubusercontent.com/67372390/215296650-f453a90c-f0d1-462a-9fe3-12c6d5f64cb6.mp4
 
+**_NOTE_** _Docker commands may be selected with either `<CR>` or `<C-a>`, selecting with
+`<C-a>` allows adding additional arguments._
+
 ## Installation
 
 ### [Lazy](https://github.com/folke/lazy.nvim)
