@@ -29,8 +29,8 @@ end
 function util.open_in_shell(command, init_term)
   util.info("Opening in shell: " .. command)
   if
-    vim.api.nvim_buf_get_option(0, "filetype")
-    == enum.TELESCOPE_PROMPT_FILETYPE
+      vim.api.nvim_buf_get_option(0, "filetype")
+      == enum.TELESCOPE_PROMPT_FILETYPE
   then
     -- NOTE: close telescope popup if open
     vim.api.nvim_buf_delete(0, { force = true })
@@ -66,6 +66,25 @@ function notify(lvl, ...)
       })
     end
   end)
+end
+
+--- Preprocess json string and remove double
+--- quotations and special quotations that may
+--- be outputted by docker on macOS
+function util.preprocess_json(json)
+  json = json:gsub("\r", "")
+  json = json:gsub("\n", "")
+
+  json = json:gsub("“", '"')
+  json = json:gsub("”", '"')
+
+  json = json:gsub('\\""', '"')
+  json = json:gsub('"\\"', '"')
+  json = json:gsub('""', '"')
+  json = json:gsub("''", "'")
+  json = json:gsub(':%s*"%s*,', ':"",')
+  json = json:gsub(":%s*'%s*,", ":'',")
+  return json
 end
 
 return util
