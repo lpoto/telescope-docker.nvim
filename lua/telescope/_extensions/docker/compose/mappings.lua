@@ -5,7 +5,10 @@ local mappings = {}
 
 mappings.keys = {
   ["<CR>"] = actions.select_compose_file,
-  ["<C-q>"] = function() end,
+  ["<C-e>"] = actions.edit_compose_file,
+  ["e"] = actions.edit_compose_file,
+  ["<C-q>"] = function()
+  end,
 }
 
 ---@param prompt_bufnr number
@@ -18,7 +21,11 @@ function mappings.attach_mappings(prompt_bufnr, map)
         f(prompt_bufnr)
       end)
     else
-      for _, mode in ipairs { "n", "i" } do
+      local modes = { "n" }
+      if key:sub(1, 1) == "<" then
+        table.insert(modes, "i")
+      end
+      for _, mode in ipairs(modes) do
         map(mode, key, function()
           f(prompt_bufnr)
         end)
