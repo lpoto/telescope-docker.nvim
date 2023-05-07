@@ -71,7 +71,8 @@ function actions.close_picker(prompt_bufnr)
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.delete(prompt_bufnr)
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.delete(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
@@ -84,15 +85,21 @@ function actions.delete(prompt_bufnr)
   end
   local image = selection.value
   local args = { "image", "rm", image.ID }
-  util.info("Deleting image:", image.ID)
-  picker.docker_state:docker_job(image, args, function()
-    actions.refresh_picker(prompt_bufnr)
-    util.info("Image", image.ID, "deleted")
-  end)
+  picker.docker_state:docker_job {
+    item = image,
+    args = args,
+    ask_for_input = ask_for_input,
+    start_msg = "Removing image: " .. image.ID,
+    end_msg = "Image " .. image.ID .. " removed",
+    callback = function()
+      actions.refresh_picker(prompt_bufnr)
+    end,
+  }
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.history(prompt_bufnr)
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.history(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
@@ -105,11 +112,15 @@ function actions.history(prompt_bufnr)
   end
   local image = selection.value
   local args = { "image", "history", image.ID }
-  picker.docker_state:docker_command(args)
+  picker.docker_state:docker_command {
+    args = args,
+    ask_for_input = ask_for_input,
+  }
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.retag(prompt_bufnr)
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.retag(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
@@ -130,11 +141,16 @@ function actions.retag(prompt_bufnr)
     image:name(),
     unpack(vim.split(retag, " ")),
   }
-  util.info("Retagging image:", image.ID)
-  picker.docker_state:docker_job(image, args, function()
-    actions.refresh_picker(prompt_bufnr)
-    util.info("Image", image.ID, "retagged")
-  end)
+  picker.docker_state:docker_job {
+    item = image,
+    args = args,
+    ask_for_input = ask_for_input,
+    start_msg = "Retagging image: " .. image.ID,
+    end_msg = "Image " .. image.ID .. " retagged",
+    callback = function()
+      actions.refresh_picker(prompt_bufnr)
+    end,
+  }
 end
 
 function actions.get_picker(prompt_bufnr)
@@ -148,13 +164,13 @@ end
 ---@param prompt_bufnr number
 ---@param options string[]
 function select_image(prompt_bufnr, options)
-  popup.open(options, function(choice)
+  popup.open(options, function(choice, ask_for_input)
     if choice == enum.IMAGES.DELETE then
-      actions.delete(prompt_bufnr)
+      actions.delete(prompt_bufnr, ask_for_input)
     elseif choice == enum.IMAGES.HISTORY then
-      actions.history(prompt_bufnr)
+      actions.history(prompt_bufnr, ask_for_input)
     elseif choice == enum.IMAGES.RETAG then
-      actions.retag(prompt_bufnr)
+      actions.retag(prompt_bufnr, ask_for_input)
     end
   end)
 end

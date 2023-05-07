@@ -51,44 +51,66 @@ function State:get_env()
   return nil
 end
 
-function State:docker_command(cmd_args)
-  if type(cmd_args) ~= "table" or not next(cmd_args) then
-    util.warn("Invalid docker arguments: " .. vim.inspect(cmd_args))
+---@class DockerCommandOpts
+---@field args string[]: Docker command arguments
+---@field ask_for_input boolean: Whether to ask for input
+---@field start_msg string?: Message to display at the start of the job
+
+---@param opts DockerCommandOpts
+function State:docker_command(opts)
+  opts = opts or {}
+  if type(opts.args) ~= "table" or not next(opts.args) then
+    util.warn("Invalid docker arguments: " .. vim.inspect(opts.args))
     return
   end
   if self.locked then
     util.warn "Docker state is locked, please wait a moment"
     return
   end
+  if opts.ask_for_input then
+    local input = vim.fn.input(
+      self.binary .. " " .. table.concat(opts.args, " ") .. " ",
+      ""
+    )
+    for _, arg in ipairs(vim.split(input, " ")) do
+      if arg:len() > 0 then
+        table.insert(opts.args, arg)
+      end
+    end
+  end
+
   self.locked = true
   local ok, e = pcall(function()
+    if type(opts.start_msg) == "string" then
+      util.info(opts.start_msg)
+    end
     if
-      vim.api.nvim_buf_get_option(0, "filetype")
-      == enum.TELESCOPE_PROMPT_FILETYPE
+        vim.api.nvim_buf_get_option(0, "filetype")
+        == enum.TELESCOPE_PROMPT_FILETYPE
     then
       local bufnr = vim.api.nvim_get_current_buf()
       pcall(telescope_actions.close, bufnr)
     end
 
-    local cmd = { self.binary, unpack(cmd_args) }
+    local cmd = { self.binary, unpack(opts.args) }
 
     local init_term = setup.get_option "init_term"
     if type(init_term) == "function" then
       init_term(cmd, self:get_env())
       return
     elseif
-      type(init_term) ~= "string"
-      or (not init_term:match "tab" and not init_term:match "split")
+        type(init_term) ~= "string"
+        or (not init_term:match "tab" and not init_term:match "split")
     then
       init_term = "tabnew"
     end
     vim.api.nvim_exec(init_term, false)
-    local opts = { detach = false }
+    local o = { detach = false }
     local env = self:get_env()
     if env then
-      opts.env = env
+      o.env = env
     end
-    vim.fn.termopen(cmd, opts)
+    vim.fn.termopen(cmd, o)
   end)
   if not ok then
     util.warn("Failed to execute docker command:", e)
@@ -96,23 +118,49 @@ function State:docker_command(cmd_args)
   self.locked = false
 end
 
-function State:docker_job(container, cmd_args, callback)
-  if type(cmd_args) ~= "table" or not next(cmd_args) then
-    util.warn("Invalid docker arguments: " .. vim.inspect(cmd_args))
+---@class DockerJobOpts
+---@field item Container|Image
+---@field args table
+---@field callback function
+---@field start_msg string
+---@field end_msg string
+---@field ask_for_input boolean
+
+---@param opts DockerJobOpts
+function State:docker_job(opts)
+  opts = opts or {}
+  if type(opts.args) ~= "table" or not next(opts.args) then
+    util.warn("Invalid docker arguments: " .. vim.inspect(opts.args))
     return
   end
   if self.locked then
     util.warn "Docker state is locked, please wait a moment"
     return
   end
+
+  if opts.ask_for_input then
+    local input = vim.fn.input(
+      self.binary .. " " .. table.concat(opts.args, " ") .. " ",
+      ""
+    )
+    for _, arg in ipairs(vim.split(input, " ")) do
+      if arg:len() > 0 then
+        table.insert(opts.args, arg)
+      end
+    end
+  end
+
   self.locked = true
   local ok, e = pcall(function()
+    if type(opts.start_msg) == "string" then
+      util.info(opts.start_msg)
+    end
     local cmd = {
       self.binary,
-      unpack(cmd_args),
+      unpack(opts.args),
     }
     local error = {}
-    local opts = {
+    local o = {
       detach = false,
       on_stderr = function(_, data)
         for _, d in ipairs(data) do
@@ -131,16 +179,19 @@ function State:docker_job(container, cmd_args, callback)
           end
           return
         end
-        if type(callback) == "function" then
-          callback(container)
+        if type(opts.callback) == "function" then
+          if type(opts.end_msg) == "string" then
+            util.info(opts.end_msg)
+          end
+          opts.callback(opts.item)
         end
       end,
     }
     local env = self:get_env()
     if env then
-      opts.env = env
+      o.env = env
     end
-    vim.fn.jobstart(cmd, opts)
+    vim.fn.jobstart(cmd, o)
   end)
   if not ok then
     util.warn(e)
