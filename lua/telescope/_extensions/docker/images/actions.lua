@@ -84,13 +84,14 @@ function actions.delete(prompt_bufnr, ask_for_input)
     return
   end
   local image = selection.value
-  local args = { "image", "rm", image.ID }
+  local name = image:name()
+  local args = { "image", "rm", name }
   picker.docker_state:docker_job {
     item = image,
     args = args,
     ask_for_input = ask_for_input,
-    start_msg = "Removing image: " .. image.ID,
-    end_msg = "Image " .. image.ID .. " removed",
+    start_msg = "Removing image: " .. name,
+    end_msg = "Image " .. name .. " removed",
     callback = function()
       actions.refresh_picker(prompt_bufnr)
     end,
