@@ -5,7 +5,7 @@ that allows managing containers, images and docker-compose files from a telescop
 
 ## Demo
 
-https://user-images.githubusercontent.com/67372390/215296650-f453a90c-f0d1-462a-9fe3-12c6d5f64cb6.mp4
+https://user-images.githubusercontent.com/67372390/236677032-32ebe222-c0f1-480c-a6b6-758ac84d0475.mp4
 
 **_NOTE_** _Docker commands may be selected with either `<CR>` or `<C-a>`, selecting with
 `<C-a>` allows adding additional arguments._
