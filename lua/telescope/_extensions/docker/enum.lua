@@ -22,6 +22,7 @@ enum.CONTAINERS = {
 enum.IMAGES = {
   DELETE = "delete",
   HISTORY = "history",
+  RETAG = "retag",
 }
 
 return enum

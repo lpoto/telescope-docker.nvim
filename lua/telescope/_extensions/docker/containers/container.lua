@@ -21,7 +21,6 @@ Container.__index = Container
 ---@return Container
 function Container:new(json)
   json = util.preprocess_json(json)
-  vim.notify(vim.inspect(json))
   local container
   if vim.json.decode then
     container = vim.json.decode(json)
