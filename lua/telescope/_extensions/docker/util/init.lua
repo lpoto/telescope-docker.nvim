@@ -33,7 +33,8 @@ function util.open_in_shell(command, init_term)
       == enum.TELESCOPE_PROMPT_FILETYPE
   then
     -- NOTE: close telescope popup if open
-    vim.api.nvim_buf_delete(0, { force = true })
+    local bufnr = vim.api.nvim_get_current_buf()
+    pcall(telescope_actions.close, bufnr)
   end
   if type(init_term) ~= "function" then
     vim.api.nvim_exec("noautocmd keepjumps tabnew", false)
