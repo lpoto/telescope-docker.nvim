@@ -78,6 +78,13 @@ function handle_window(bufnr, winid, selection_callback)
   end, {
     buffer = bufnr,
   })
+  vim.keymap.set("", "<C-a>", function()
+    local line = vim.api.nvim_get_current_line()
+    vim.api.nvim_exec_autocmds("FocusLost", { buffer = bufnr })
+    selection_callback(line, true)
+  end, {
+    buffer = bufnr,
+  })
 end
 
 function determine_win_size(choices)
