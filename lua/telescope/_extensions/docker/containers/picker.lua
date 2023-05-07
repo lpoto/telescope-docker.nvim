@@ -10,15 +10,20 @@ local conf = require("telescope.config").values
 local available_containers_telescope_picker = function(options)
   util.info "Fetching containers ..."
 
+  options = options or {}
+
   if options.env ~= nil and type(options.env) ~= "table" then
     util.warn "env must be a table"
     return
   end
+  options.env = options.env or {}
+  if options.host ~= nil and type(options.host) ~= "string" then
+    util.warn "host must be a string"
+    return
+  end
 
-  options = options or {}
-  local env = options.env or {}
   if options.host then
-    env.DOCKER_HOST = options.host
+    options.env.DOCKER_HOST = options.host
   end
   local docker_state = State:new(options.env)
 
