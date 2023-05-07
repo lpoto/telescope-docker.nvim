@@ -19,10 +19,11 @@ end
 ---@param status table
 ---@param image Image
 local function display_image(status, image)
-  local buf = vim.api.nvim_create_buf(false, true)
   local lines = image:represent()
-  pcall(vim.api.nvim_buf_set_lines, buf, 0, -1, false, lines)
-  pcall(vim.api.nvim_buf_set_option, buf, "syntax", "yaml")
+  local buf = util.create_preview_buffer(lines)
+  if buf == nil or buf == -1 then
+    return
+  end
   local ok, e = pcall(vim.api.nvim_win_set_buf, status.preview_win, buf)
   if ok == false then
     util.error(e)
