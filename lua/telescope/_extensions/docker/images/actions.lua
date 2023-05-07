@@ -1,6 +1,7 @@
 local enum = require "telescope._extensions.docker.enum"
 local util = require "telescope._extensions.docker.util"
 local popup = require "telescope._extensions.docker.util.popup"
+local setup = require "telescope._extensions.docker.setup"
 local action_state = require "telescope.actions.state"
 local finder = require "telescope._extensions.docker.images.finder"
 local telescope_actions = require "telescope.actions"
@@ -17,6 +18,7 @@ function actions.select_image(prompt_bufnr)
   return select_image(prompt_bufnr, {
     enum.IMAGES.DELETE,
     enum.IMAGES.HISTORY,
+    enum.IMAGES.RETAG,
   })
 end
 
@@ -73,10 +75,10 @@ function actions.delete(prompt_bufnr)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
+      not picker
+      or not picker.docker_state
+      or not selection
+      or not selection.value
   then
     return
   end
@@ -94,16 +96,45 @@ function actions.history(prompt_bufnr)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
+      not picker
+      or not picker.docker_state
+      or not selection
+      or not selection.value
   then
     return
   end
   local image = selection.value
   local args = { "image", "history", image.ID }
   picker.docker_state:docker_command(args)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+function actions.retag(prompt_bufnr)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+      not picker
+      or not picker.docker_state
+      or not selection
+      or not selection.value
+  then
+    return
+  end
+  local image = selection.value
+  local binary = setup.get_option "binary" or "docker"
+  local cmd = binary .. " image tag " .. image:name() .. " "
+  local retag = vim.fn.input(cmd)
+  local args = {
+    "image",
+    "tag",
+    image:name(),
+    unpack(vim.split(retag, " ")),
+  }
+  util.info("Retagging image:", image.ID)
+  picker.docker_state:docker_job(image, args, function()
+    actions.refresh_picker(prompt_bufnr)
+    util.info("Image", image.ID, "retagged")
+  end)
 end
 
 function actions.get_picker(prompt_bufnr)
@@ -122,6 +153,8 @@ function select_image(prompt_bufnr, options)
       actions.delete(prompt_bufnr)
     elseif choice == enum.IMAGES.HISTORY then
       actions.history(prompt_bufnr)
+    elseif choice == enum.IMAGES.RETAG then
+      actions.retag(prompt_bufnr)
     end
   end)
 end
