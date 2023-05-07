@@ -1,4 +1,5 @@
 local enum = require "telescope._extensions.docker.enum"
+local telescope_actions = require "telescope.actions"
 
 local util = {}
 
