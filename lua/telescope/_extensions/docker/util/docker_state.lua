@@ -98,18 +98,6 @@ function State:docker_command(opts)
     end
 
     local cmd = { self.binary, unpack(opts.args) }
-
-    local init_term = setup.get_option "init_term"
-    if type(init_term) == "function" then
-      init_term(cmd, self:get_env(), opts.cwd)
-      return
-    elseif
-      type(init_term) ~= "string"
-      or (not init_term:match "tab" and not init_term:match "split")
-    then
-      init_term = "tabnew"
-    end
-    vim.api.nvim_exec(init_term, false)
     local o = { detach = false }
     local env = self:get_env()
     if env then
@@ -118,7 +106,8 @@ function State:docker_command(opts)
     if type(opts.cwd) == "string" then
       o.cwd = opts.cwd
     end
-    vim.fn.termopen(cmd, o)
+    local init_term = setup.get_option "init_term"
+    util.open_in_shell(cmd, init_term, o)
   end)
   if not ok then
     util.warn("Failed to execute docker command:", e)

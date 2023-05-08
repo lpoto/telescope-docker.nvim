@@ -25,10 +25,10 @@ function util.set_log_level(lvl)
   end
 end
 
----@param command string
----@param init_term function?
-function util.open_in_shell(command, init_term)
-  util.info("Opening in shell: " .. command)
+---@param command string|table
+---@param init_term string|function|nil
+---@param opts table|nil
+function util.open_in_shell(command, init_term, opts)
   if
     vim.api.nvim_buf_get_option(0, "filetype")
     == enum.TELESCOPE_PROMPT_FILETYPE
@@ -37,12 +37,43 @@ function util.open_in_shell(command, init_term)
     local bufnr = vim.api.nvim_get_current_buf()
     pcall(telescope_actions.close, bufnr)
   end
-  if type(init_term) ~= "function" then
-    vim.api.nvim_exec("noautocmd keepjumps tabnew", false)
-    vim.api.nvim_exec("noautocmd term " .. command, false)
-  else
-    init_term(command)
+
+  opts = opts or {}
+  if opts.detatch == nil then
+    opts.detach = false
   end
+
+  local init_term_f
+  if type(init_term) ~= "function" then
+    if
+      type(init_term) ~= "string"
+      or (not init_term:match "tab" and not init_term:match "split")
+    then
+      init_term = "tabnew"
+    end
+    init_term_f = function(cmd)
+      vim.api.nvim_exec("noautocmd keepjumps " .. init_term, false)
+      local buf = vim.api.nvim_get_current_buf()
+      pcall(vim.api.nvim_buf_set_option, buf, "buftype", "nofile")
+      pcall(vim.api.nvim_buf_set_option, buf, "bufhidden", "wipe")
+      local job_id = vim.fn.termopen(cmd, opts)
+      vim.api.nvim_create_autocmd({ "BufUnload", "BufHidden" }, {
+        buffer = buf,
+        once = true,
+        callback = function()
+          vim.schedule(function()
+            pcall(vim.fn.jobstop, job_id)
+            vim.defer_fn(function()
+              pcall(vim.api.nvim_buf_delete, buf, { force = true })
+            end, 10)
+          end)
+        end,
+      })
+    end
+  else
+    init_term_f = init_term
+  end
+  init_term_f(command)
 end
 
 function notify(lvl, ...)
