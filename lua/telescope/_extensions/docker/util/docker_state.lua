@@ -90,8 +90,8 @@ function State:docker_command(opts)
       util.info(opts.start_msg)
     end
     if
-        vim.api.nvim_buf_get_option(0, "filetype")
-        == enum.TELESCOPE_PROMPT_FILETYPE
+      vim.api.nvim_buf_get_option(0, "filetype")
+      == enum.TELESCOPE_PROMPT_FILETYPE
     then
       local bufnr = vim.api.nvim_get_current_buf()
       pcall(telescope_actions.close, bufnr)
@@ -104,8 +104,8 @@ function State:docker_command(opts)
       init_term(cmd, self:get_env(), opts.cwd)
       return
     elseif
-        type(init_term) ~= "string"
-        or (not init_term:match "tab" and not init_term:match "split")
+      type(init_term) ~= "string"
+      or (not init_term:match "tab" and not init_term:match "split")
     then
       init_term = "tabnew"
     end
@@ -292,6 +292,7 @@ function State:fetch_images(callback)
       "--format='{{json . }}'",
     }
     local images = {}
+    local unnamed_images = {}
 
     local opts = {
       detach = false,
@@ -301,7 +302,11 @@ function State:fetch_images(callback)
             if json:len() > 0 then
               json = string.sub(json, 2, #json - 1)
               local image = Image:new(json)
-              table.insert(images, image)
+              if image:name() == "<none>:<none>" then
+                table.insert(unnamed_images, image)
+              else
+                table.insert(images, image)
+              end
             end
           end
         end)
@@ -326,6 +331,9 @@ function State:fetch_images(callback)
     job_id = vim.fn.jobstart(cmd, opts)
     if not callback then
       vim.fn.jobwait({ job_id }, 2000)
+    end
+    for _, i in ipairs(unnamed_images) do
+      table.insert(images, i)
     end
     return images
   end)

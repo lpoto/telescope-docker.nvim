@@ -77,16 +77,21 @@ function actions.delete(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
   local image = selection.value
+  local args = { "image", "rm" }
   local name = image:name()
-  local args = { "image", "rm", name }
+  if name == "<none>:<none>" then
+    table.insert(args, image.ID)
+  else
+    table.insert(args, name)
+  end
   picker.docker_state:docker_job {
     item = image,
     args = args,
@@ -105,10 +110,10 @@ function actions.history(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -126,10 +131,10 @@ function actions.retag(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -161,21 +166,21 @@ function actions.push(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
   local image = selection.value
-  local args = {"push", image:name()}
+  local args = { "push", image:name() }
   picker.docker_state:docker_job {
     item = image,
     args = args,
     ask_for_input = ask_for_input,
     start_msg = "Pushing image: " .. image:name(),
-    end_msg = "Image " .. image:name().. " pushed",
+    end_msg = "Image " .. image:name() .. " pushed",
     callback = function()
       actions.refresh_picker(prompt_bufnr)
     end,

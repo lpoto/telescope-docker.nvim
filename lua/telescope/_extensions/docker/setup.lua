@@ -30,7 +30,6 @@ function setup.setup(o)
   if o.binary ~= nil and type(o.binary) ~= "string" then
     o.binary = nil
   end
-  o.log_level = nil
 
   if type(o.theme) == "string" then
     local theme = require("telescope.themes")["get_" .. o.theme]
