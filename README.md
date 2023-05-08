@@ -34,7 +34,7 @@ require("telescope").setup {
       log_level = vim.log.levels.INFO,
       init_term = "tabnew", -- "vsplit new", "split new", ...
       -- NOTE: init_term may also be a function that receives
-      -- a command and a table of env. variables as input.
+      -- a command, a table of env. variables and cwd as input.
       -- This is intended only for advanced use, in case you want
       -- to send the env. and command to a tmux terminal or floaterm
       -- or something other than a built in terminal.

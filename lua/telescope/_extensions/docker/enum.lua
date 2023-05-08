@@ -26,4 +26,9 @@ enum.IMAGES = {
   PUSH = "push",
 }
 
+enum.DOCKERFILES = {
+  BUILD = "build",
+  CD_AND_BUILD = "cd & build",
+}
+
 return enum

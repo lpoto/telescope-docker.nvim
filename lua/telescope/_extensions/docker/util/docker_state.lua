@@ -55,6 +55,7 @@ end
 ---@field args string[]: Docker command arguments
 ---@field ask_for_input boolean: Whether to ask for input
 ---@field start_msg string?: Message to display at the start of the job
+---@field cwd string?: Current working directory
 
 ---@param opts DockerCommandOpts
 function State:docker_command(opts)
@@ -100,7 +101,7 @@ function State:docker_command(opts)
 
     local init_term = setup.get_option "init_term"
     if type(init_term) == "function" then
-      init_term(cmd, self:get_env())
+      init_term(cmd, self:get_env(), opts.cwd)
       return
     elseif
         type(init_term) ~= "string"
@@ -113,6 +114,9 @@ function State:docker_command(opts)
     local env = self:get_env()
     if env then
       o.env = env
+    end
+    if type(opts.cwd) == "string" then
+      o.cwd = opts.cwd
     end
     vim.fn.termopen(cmd, o)
   end)

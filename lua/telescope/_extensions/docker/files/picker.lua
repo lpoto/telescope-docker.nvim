@@ -1,36 +1,15 @@
-local mappings = require "telescope._extensions.docker.compose.mappings"
+local mappings = require "telescope._extensions.docker.files.mappings"
 local builtin = require "telescope.builtin"
-local util = require "telescope._extensions.docker.util"
 local action_state = require "telescope.actions.state"
 local State = require "telescope._extensions.docker.util.docker_state"
 
 local get_result_processor
+local name = "Dockerfiles"
 
-local docker_compose_picker = function(options)
+local dockerfiles_picker = function(options)
   -- TODO: update this command
   options = options or {}
-  if not options.find_command then
-    if 1 ~= vim.fn.executable "rg" then
-      local args = { "--type", "f", "-e", "yml", "-e", "yaml" }
-      if 1 == vim.fn.executable "fd" then
-        options.find_command = { "fd", unpack(args) }
-      elseif 1 == vim.fn.executable "fdfind" then
-        options.find_command = { "fdfind", unpack(args) }
-      end
-    else
-      options.find_command = {
-        "rg",
-        "--files",
-        "-t",
-        "yaml",
-      }
-    end
-  end
 
-  if not options.find_command then
-    util.error "No suitable find command found. Please install fd, fdfind or rg."
-    return
-  end
   if options.hidden == nil then
     options.hidden = true
   end
@@ -51,10 +30,12 @@ local docker_compose_picker = function(options)
   if options.attach_mappings == nil then
     options.attach_mappings = mappings.attach_mappings
   end
+  if options.search_file == nil then
+    options.search_file = "ockerf"
+  end
   if options.prompt_tile == nil then
     options.prompt_title = "Docker Compose Files"
   end
-  local name = "Docker compose files"
   options.prompt_title = name
   builtin.find_files(options)
 
@@ -66,8 +47,8 @@ local docker_compose_picker = function(options)
 end
 
 --- This overrides the telescope's default  result processor, so
---- we can filter out the results that are yaml files but not docker-compose files.
---- We ignore entries that do not match patterns that  the docker-compose
+--- we can filter out the results that are yaml files but not docker-files files.
+--- We ignore entries that do not match patterns that  the docker-files
 --- files should match.
 function get_result_processor(picker, find_id, prompt, status_updater)
   local count = 0
@@ -82,7 +63,8 @@ function get_result_processor(picker, find_id, prompt, status_updater)
     if find_id ~= picker._find_id then
       return true
     end
-    if not entry or entry.valid == false then
+    local p = action_state.get_current_picker(vim.fn.bufnr())
+    if p ~= picker then
       return
     end
     picker:_increment "processed"
@@ -91,11 +73,11 @@ function get_result_processor(picker, find_id, prompt, status_updater)
     local file = vim.F.if_nil(
       entry.filename,
       type(entry.value) == "string"
-        and vim.fn.strchars(entry.value) > 0
-        and vim.fn.filereadable(entry.value) == 1
-        and entry.value
+      and vim.fn.strchars(entry.value) > 0
+      and vim.fn.filereadable(entry.value) == 1
+      and entry.value
     ) -- false if none is true
-    if not file then
+    if not file or file:len() == 0 then
       picker:_decrement "processed"
       return
     end
@@ -107,25 +89,18 @@ function get_result_processor(picker, find_id, prompt, status_updater)
       end
     end
 
-    local lines = vim.fn.readfile(file)
-    local patterns_found = 0
-    -- NOTE: docker-compose files should always have a services section
-    -- and an image or build section
-    -- so we check for those patterns and ignore
-    -- entries that do not match
-    for _, line in ipairs(lines) do
-      if patterns_found >= 2 then
-        break
-      end
-      if patterns_found == 0 and line:match "^%s*services:%s*" then
-        patterns_found = 1
-      elseif patterns_found > 0 then
-        if line:match "^%s*image:" or line:match "^%s*build:" then
-          patterns_found = patterns_found + 1
-        end
-      end
-    end
-    if patterns_found < 2 then
+    local buf = vim.api.nvim_create_buf(false, true)
+    local ok, is_dockerfile = pcall(function()
+      local ft = ""
+      vim.api.nvim_buf_call(buf, function()
+        vim.cmd("silent noautocmd e " .. file)
+        vim.cmd "filetype detect"
+        ft = vim.bo.filetype
+      end)
+      return ft == "dockerfile"
+    end)
+    pcall(vim.api.nvim_buf_delete, buf, { force = true })
+    if not ok or not is_dockerfile then
       picker:_decrement "processed"
       return
     end
@@ -135,5 +110,5 @@ function get_result_processor(picker, find_id, prompt, status_updater)
 end
 
 return function(opts)
-  docker_compose_picker(opts)
+  dockerfiles_picker(opts)
 end
