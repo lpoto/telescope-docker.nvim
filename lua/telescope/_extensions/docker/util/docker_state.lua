@@ -55,6 +55,7 @@ end
 ---@field args string[]: Docker command arguments
 ---@field ask_for_input boolean: Whether to ask for input
 ---@field start_msg string?: Message to display at the start of the job
+---@field cwd string?: Current working directory
 
 ---@param opts DockerCommandOpts
 function State:docker_command(opts)
@@ -89,8 +90,8 @@ function State:docker_command(opts)
       util.info(opts.start_msg)
     end
     if
-        vim.api.nvim_buf_get_option(0, "filetype")
-        == enum.TELESCOPE_PROMPT_FILETYPE
+      vim.api.nvim_buf_get_option(0, "filetype")
+      == enum.TELESCOPE_PROMPT_FILETYPE
     then
       local bufnr = vim.api.nvim_get_current_buf()
       pcall(telescope_actions.close, bufnr)
@@ -100,11 +101,11 @@ function State:docker_command(opts)
 
     local init_term = setup.get_option "init_term"
     if type(init_term) == "function" then
-      init_term(cmd, self:get_env())
+      init_term(cmd, self:get_env(), opts.cwd)
       return
     elseif
-        type(init_term) ~= "string"
-        or (not init_term:match "tab" and not init_term:match "split")
+      type(init_term) ~= "string"
+      or (not init_term:match "tab" and not init_term:match "split")
     then
       init_term = "tabnew"
     end
@@ -113,6 +114,9 @@ function State:docker_command(opts)
     local env = self:get_env()
     if env then
       o.env = env
+    end
+    if type(opts.cwd) == "string" then
+      o.cwd = opts.cwd
     end
     vim.fn.termopen(cmd, o)
   end)
@@ -288,6 +292,7 @@ function State:fetch_images(callback)
       "--format='{{json . }}'",
     }
     local images = {}
+    local unnamed_images = {}
 
     local opts = {
       detach = false,
@@ -297,7 +302,11 @@ function State:fetch_images(callback)
             if json:len() > 0 then
               json = string.sub(json, 2, #json - 1)
               local image = Image:new(json)
-              table.insert(images, image)
+              if image:name() == "<none>:<none>" then
+                table.insert(unnamed_images, image)
+              else
+                table.insert(images, image)
+              end
             end
           end
         end)
@@ -307,8 +316,15 @@ function State:fetch_images(callback)
       end,
       on_exit = function()
         self.locked = false
+        local im = {}
+        for _, image in ipairs(images) do
+          table.insert(im, image)
+        end
+        for _, image in ipairs(unnamed_images) do
+          table.insert(im, image)
+        end
         if callback then
-          callback(images)
+          callback(im)
         end
       end,
     }
@@ -323,7 +339,14 @@ function State:fetch_images(callback)
     if not callback then
       vim.fn.jobwait({ job_id }, 2000)
     end
-    return images
+    local im = {}
+    for _, image in ipairs(images) do
+      table.insert(im, image)
+    end
+    for _, image in ipairs(unnamed_images) do
+      table.insert(im, image)
+    end
+    return im
   end)
   if not ok then
     util.warn(images)

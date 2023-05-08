@@ -30,8 +30,8 @@ end
 function util.open_in_shell(command, init_term)
   util.info("Opening in shell: " .. command)
   if
-      vim.api.nvim_buf_get_option(0, "filetype")
-      == enum.TELESCOPE_PROMPT_FILETYPE
+    vim.api.nvim_buf_get_option(0, "filetype")
+    == enum.TELESCOPE_PROMPT_FILETYPE
   then
     -- NOTE: close telescope popup if open
     local bufnr = vim.api.nvim_get_current_buf()

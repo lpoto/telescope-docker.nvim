@@ -57,10 +57,10 @@ function actions.start(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -88,10 +88,10 @@ function actions.pause(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -119,10 +119,10 @@ function actions.unpause(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -150,10 +150,10 @@ function actions.stop(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -181,10 +181,10 @@ function actions.kill(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -212,10 +212,10 @@ function actions.delete(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -243,10 +243,10 @@ function actions.rename(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -277,10 +277,10 @@ function actions.attach(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -301,10 +301,10 @@ function actions.logs(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -321,10 +321,10 @@ function actions.stats(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -345,10 +345,10 @@ function actions.exec(prompt_bufnr, ask_for_input)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
@@ -398,7 +398,7 @@ function actions.refresh_picker(prompt_bufnr)
       return
     end
     local ok, containers_finder =
-        pcall(finder.containers_finder, containers_tbl)
+      pcall(finder.containers_finder, containers_tbl)
     if not ok then
       util.error(containers_finder)
     end
