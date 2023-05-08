@@ -63,9 +63,6 @@ require("telescope").extensions.docker.containers(--[[opts...]])
 --require("telescope").extensions.docker.files(...)
 ```
 
-> **_NOTE_** The dockerfiles command is still experimental, so it
-> may be slow or not always work as expected.
-
 ## Changing docker environment
 
 A table of environment variables may be passed to the pickers:
