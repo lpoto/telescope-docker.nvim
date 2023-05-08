@@ -52,10 +52,11 @@ function actions.__build(prompt_bufnr, ask_for_input, cd, tag)
       default = "",
       cancelreturn = nil,
     }
-    if tag_input and tag_input:len() > 0 then
-      table.insert(args, "-t")
-      table.insert(args, tag_input)
+    if not tag_input or tag_input:len() == 0 then
+      return
     end
+    table.insert(args, "-t")
+    table.insert(args, tag_input)
   end
   table.insert(args, ".")
   picker.docker_state:docker_command {
