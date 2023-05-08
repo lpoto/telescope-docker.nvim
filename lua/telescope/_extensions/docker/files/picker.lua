@@ -7,7 +7,6 @@ local get_result_processor
 local name = "Dockerfiles"
 
 local dockerfiles_picker = function(options)
-  -- TODO: update this command
   options = options or {}
 
   if options.hidden == nil then
@@ -33,9 +32,7 @@ local dockerfiles_picker = function(options)
   if options.search_file == nil then
     options.search_file = "ockerf"
   end
-  if options.prompt_tile == nil then
-    options.prompt_title = "Docker Compose Files"
-  end
+
   options.prompt_title = name
   builtin.find_files(options)
 
@@ -47,9 +44,12 @@ local dockerfiles_picker = function(options)
 end
 
 --- This overrides the telescope's default  result processor, so
---- we can filter out the results that are yaml files but not docker-files files.
---- We ignore entries that do not match patterns that  the docker-files
---- files should match.
+--- we can filter out the results that do not have the dockerfile filetype.
+---
+--- TODO: Determine how to do this more elengantly, without
+--- having to load the files and check their filetype.
+--- This also requires that the find command searches for files
+--- by "ockerf" pattern, otherwise it is too slow.
 function get_result_processor(picker, find_id, prompt, status_updater)
   local count = 0
   local cb_add = function(score, entry)

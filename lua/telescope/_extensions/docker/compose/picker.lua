@@ -5,9 +5,9 @@ local action_state = require "telescope.actions.state"
 local State = require "telescope._extensions.docker.util.docker_state"
 
 local get_result_processor
+local name = "Docker compose files"
 
 local docker_compose_picker = function(options)
-  -- TODO: update this command
   options = options or {}
   if not options.find_command then
     if 1 ~= vim.fn.executable "rg" then
@@ -54,7 +54,6 @@ local docker_compose_picker = function(options)
   if options.prompt_tile == nil then
     options.prompt_title = "Docker Compose Files"
   end
-  local name = "Docker compose files"
   options.prompt_title = name
   builtin.find_files(options)
 
