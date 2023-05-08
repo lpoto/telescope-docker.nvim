@@ -9,33 +9,14 @@ local name = "Docker compose files"
 
 local docker_compose_picker = function(options)
   options = options or {}
-  if not options.find_command then
-    if 1 ~= vim.fn.executable "rg" then
-      local args = { "--type", "f", "-e", "yml", "-e", "yaml" }
-      if 1 == vim.fn.executable "fd" then
-        options.find_command = { "fd", unpack(args) }
-      elseif 1 == vim.fn.executable "fdfind" then
-        options.find_command = { "fdfind", unpack(args) }
-      end
-    else
-      options.find_command = {
-        "rg",
-        "--files",
-        "-t",
-        "yaml",
-      }
-    end
-  end
-
-  if not options.find_command then
-    util.error "No suitable find command found. Please install fd, fdfind or rg."
-    return
-  end
   if options.hidden == nil then
     options.hidden = true
   end
   if options.no_ignore == nil then
     options.no_ignore = true
+  end
+  if options.search_file == nil then
+    options.search_file = "{*.yml,*.yaml}"
   end
   if options.file_ignore_patterns == nil then
     options.file_ignore_patterns = {
