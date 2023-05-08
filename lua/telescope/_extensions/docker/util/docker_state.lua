@@ -316,8 +316,15 @@ function State:fetch_images(callback)
       end,
       on_exit = function()
         self.locked = false
+        local im = {}
+        for _, image in ipairs(images) do
+          table.insert(im, image)
+        end
+        for _, image in ipairs(unnamed_images) do
+          table.insert(im, image)
+        end
         if callback then
-          callback(images)
+          callback(im)
         end
       end,
     }
@@ -332,10 +339,14 @@ function State:fetch_images(callback)
     if not callback then
       vim.fn.jobwait({ job_id }, 2000)
     end
-    for _, i in ipairs(unnamed_images) do
-      table.insert(images, i)
+    local im = {}
+    for _, image in ipairs(images) do
+      table.insert(im, image)
     end
-    return images
+    for _, image in ipairs(unnamed_images) do
+      table.insert(im, image)
+    end
+    return im
   end)
   if not ok then
     util.warn(images)

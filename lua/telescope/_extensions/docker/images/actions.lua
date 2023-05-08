@@ -87,8 +87,12 @@ function actions.delete(prompt_bufnr, ask_for_input)
   local image = selection.value
   local args = { "image", "rm" }
   local name = image:name()
+  local start_msg = "Removing image: " .. name
+  local end_msg = "Image " .. name .. " removed"
   if name == "<none>:<none>" then
     table.insert(args, image.ID)
+    start_msg = "Removing image: " .. image.ID
+    end_msg = "Image " .. image.ID .. " removed"
   else
     table.insert(args, name)
   end
@@ -96,8 +100,8 @@ function actions.delete(prompt_bufnr, ask_for_input)
     item = image,
     args = args,
     ask_for_input = ask_for_input,
-    start_msg = "Removing image: " .. name,
-    end_msg = "Image " .. name .. " removed",
+    start_msg = start_msg,
+    end_msg = end_msg,
     callback = function()
       actions.refresh_picker(prompt_bufnr)
     end,
