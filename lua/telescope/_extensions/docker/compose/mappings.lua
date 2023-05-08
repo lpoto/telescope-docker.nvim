@@ -8,8 +8,6 @@ mappings.keys = {
   ["<C-a>"] = actions.select_compose_file,
   ["<C-e>"] = actions.edit_compose_file,
   ["e"] = actions.edit_compose_file,
-  ["<C-q>"] = function()
-  end,
 }
 
 ---@param prompt_bufnr number
