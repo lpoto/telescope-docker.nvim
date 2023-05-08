@@ -23,6 +23,7 @@ enum.IMAGES = {
   DELETE = "delete",
   HISTORY = "history",
   RETAG = "retag",
+  PUSH = "push",
 }
 
 return enum

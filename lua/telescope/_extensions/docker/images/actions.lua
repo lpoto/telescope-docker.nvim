@@ -19,6 +19,7 @@ function actions.select_image(prompt_bufnr)
     enum.IMAGES.DELETE,
     enum.IMAGES.HISTORY,
     enum.IMAGES.RETAG,
+    enum.IMAGES.PUSH,
   })
 end
 
@@ -154,6 +155,33 @@ function actions.retag(prompt_bufnr, ask_for_input)
   }
 end
 
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.push(prompt_bufnr, ask_for_input)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+      not picker
+      or not picker.docker_state
+      or not selection
+      or not selection.value
+  then
+    return
+  end
+  local image = selection.value
+  local args = {"push", image:name()}
+  picker.docker_state:docker_job {
+    item = image,
+    args = args,
+    ask_for_input = ask_for_input,
+    start_msg = "Pushing image: " .. image:name(),
+    end_msg = "Image " .. image:name().. " pushed",
+    callback = function()
+      actions.refresh_picker(prompt_bufnr)
+    end,
+  }
+end
+
 function actions.get_picker(prompt_bufnr)
   if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
     prompt_bufnr = vim.api.nvim_get_current_buf()
@@ -172,6 +200,8 @@ function select_image(prompt_bufnr, options)
       actions.history(prompt_bufnr, ask_for_input)
     elseif choice == enum.IMAGES.RETAG then
       actions.retag(prompt_bufnr, ask_for_input)
+    elseif choice == enum.IMAGES.PUSH then
+      actions.push(prompt_bufnr, ask_for_input)
     end
   end)
 end
