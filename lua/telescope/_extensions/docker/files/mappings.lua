@@ -5,6 +5,9 @@ local mappings = {}
 
 mappings.keys = {
   ["<CR>"] = actions.build_from_input,
+  ["<C-a>"] = function(pb)
+    actions.build_from_input(pb, true)
+  end,
   ["<C-e>"] = actions.edit_dockerfile,
   ["e"] = actions.edit_dockerfile,
 }

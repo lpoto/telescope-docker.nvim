@@ -21,18 +21,18 @@ end
 ---Set tag from the user input.
 ---
 ---@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.build_from_input(prompt_bufnr)
-  actions.__build(prompt_bufnr, false, true, true)
+function actions.build_from_input(prompt_bufnr, ask_for_input)
+  actions.__build(prompt_bufnr, ask_for_input, true, true)
 end
 
 function actions.__build(prompt_bufnr, ask_for_input, cd, tag)
   local selection = action_state.get_selected_entry()
   local picker = action_state.get_current_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end

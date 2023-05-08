@@ -73,9 +73,9 @@ function get_result_processor(picker, find_id, prompt, status_updater)
     local file = vim.F.if_nil(
       entry.filename,
       type(entry.value) == "string"
-      and vim.fn.strchars(entry.value) > 0
-      and vim.fn.filereadable(entry.value) == 1
-      and entry.value
+        and vim.fn.strchars(entry.value) > 0
+        and vim.fn.filereadable(entry.value) == 1
+        and entry.value
     ) -- false if none is true
     if not file or file:len() == 0 then
       picker:_decrement "processed"

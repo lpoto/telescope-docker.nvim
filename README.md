@@ -63,7 +63,7 @@ require("telescope").extensions.docker.containers(--[[opts...]])
 --require("telescope").extensions.docker.files(...)
 ```
 
-> **_NOTE_** The docker files command is still experimental, so it
+> **_NOTE_** The dockerfiles command is still experimental, so it
 > may be slow or not always work as expected.
 
 ## Changing docker environment

@@ -1,7 +1,7 @@
 local util = require "telescope._extensions.docker.util"
 local setup = require "telescope._extensions.docker.setup"
 local containers_picker =
-    require "telescope._extensions.docker.containers.picker"
+  require "telescope._extensions.docker.containers.picker"
 local images_picker = require "telescope._extensions.docker.images.picker"
 local compose_picker = require "telescope._extensions.docker.compose.picker"
 local dockerfiles_picker = require "telescope._extensions.docker.files.picker"
@@ -12,7 +12,7 @@ local has_telescope, telescope = pcall(require, "telescope")
 if not has_telescope then
   util.warn(
     "This extension requires telescope.nvim "
-    .. "(https://github.com/nvim-telescope/telescope.nvim)"
+      .. "(https://github.com/nvim-telescope/telescope.nvim)"
   )
 end
 
