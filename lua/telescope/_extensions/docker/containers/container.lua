@@ -6,6 +6,7 @@ local Item = require "telescope._extensions.docker.util.item"
 ---@field Command string
 ---@field Names string
 ---@field State string
+---@field Status string
 ---@field CreatedAt string
 ---@field Image string
 ---@field Mounts string
@@ -38,6 +39,7 @@ end
 Container.fields = {
   { name = "ID", key_hl = "Conditional", value_hl = "Number" },
   { name = "Names", key_hl = "Conditional", value_hl = "String" },
+  { name = "State", key_hl = "Conditional", value_hl = "Function" },
   { name = "Status", key_hl = "Conditional", value_hl = "Function" },
   { name = "Command", key_hl = "Conditional", value_hl = "String" },
   { name = "CreatedAt", key_hl = "Conditional", value_hl = "String" },
