@@ -88,9 +88,6 @@ function State:docker_command(opts)
 
   self.locked = true
   local ok, e = pcall(function()
-    if type(opts.start_msg) == "string" then
-      util.info(opts.start_msg)
-    end
     if
       vim.api.nvim_buf_get_option(0, "filetype")
       == enum.TELESCOPE_PROMPT_FILETYPE
