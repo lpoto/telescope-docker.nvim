@@ -54,9 +54,11 @@ end
 ---@class DockerCommandOpts
 ---@field args string[]: Docker command arguments
 ---@field ask_for_input boolean: Whether to ask for input
----@field start_msg string?: Message to display at the start of the job
 ---@field cwd string?: Current working directory
 
+---Execute a docker command with the provided arguments in
+---a new terminal window.
+---
 ---@param opts DockerCommandOpts
 function State:docker_command(opts)
   opts = opts or {}
@@ -86,9 +88,6 @@ function State:docker_command(opts)
 
   self.locked = true
   local ok, e = pcall(function()
-    if type(opts.start_msg) == "string" then
-      util.info(opts.start_msg)
-    end
     if
       vim.api.nvim_buf_get_option(0, "filetype")
       == enum.TELESCOPE_PROMPT_FILETYPE
@@ -123,6 +122,8 @@ end
 ---@field end_msg string
 ---@field ask_for_input boolean
 
+---Execute an async docker command with the provided arguments.
+---
 ---@param opts DockerJobOpts
 function State:docker_job(opts)
   opts = opts or {}

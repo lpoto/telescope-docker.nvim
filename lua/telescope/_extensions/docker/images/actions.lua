@@ -144,8 +144,14 @@ function actions.retag(prompt_bufnr, ask_for_input)
   end
   local image = selection.value
   local binary = setup.get_option "binary" or "docker"
-  local cmd = binary .. " image tag " .. image:name() .. " "
-  local retag = vim.fn.input(cmd)
+  local retag = vim.fn.input {
+    prompt = binary .. " image tag " .. image:name() .. " ",
+    default = "",
+    cancelreturn = "",
+  }
+  if type(retag) ~= "string" or retag:len() == 0 then
+    return
+  end
   local args = {
     "image",
     "tag",
@@ -179,15 +185,9 @@ function actions.push(prompt_bufnr, ask_for_input)
   end
   local image = selection.value
   local args = { "push", image:name() }
-  picker.docker_state:docker_job {
-    item = image,
+  picker.docker_state:docker_command {
     args = args,
     ask_for_input = ask_for_input,
-    start_msg = "Pushing image: " .. image:name(),
-    end_msg = "Image " .. image:name() .. " pushed",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
   }
 end
 
