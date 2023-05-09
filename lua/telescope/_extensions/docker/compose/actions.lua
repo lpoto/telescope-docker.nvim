@@ -25,9 +25,12 @@ end
 function __select_compose_file(file)
   local cmd = "docker-compose -f " .. file .. " "
 
-  local suffix = vim.fn.input(cmd)
-  if not suffix or suffix:len() == 0 then
-    util.info "Invalid docker compose command"
+  local suffix = vim.fn.input {
+    prompt = cmd,
+    default = "",
+    cancelreturn = "",
+  }
+  if type(suffix) ~= "string" or suffix:len() == 0 then
     return
   end
 

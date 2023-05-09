@@ -252,8 +252,14 @@ function actions.rename(prompt_bufnr, ask_for_input)
   end
   local container = selection.value
   local binary = setup.get_option "binary" or "docker"
-  local cmd = binary .. " rename " .. container.ID .. " "
-  local rename = vim.fn.input(cmd)
+  local rename = vim.fn.input {
+    prompt = binary .. " rename " .. container.ID .. " ",
+    default = "",
+    cancelreturn = "",
+  }
+  if type(rename) ~= "string" or rename == "" then
+    return
+  end
   local args = {
     "rename",
     container.ID,
@@ -358,10 +364,12 @@ function actions.exec(prompt_bufnr, ask_for_input)
     return
   end
   local binary = setup.get_option "binary" or "docker"
-  local command = binary .. " exec -it " .. container.ID .. " "
-  local exec = vim.fn.input(command)
-  if not exec or exec:len() == 0 then
-    util.warn "Invalid command"
+  local exec = vim.fn.input {
+    prompt = binary .. " exec -it " .. container.ID .. " ",
+    default = "",
+    cancelreturn = "",
+  }
+  if type(exec) ~= "string" or exec:len() == 0 then
     return
   end
   local args = {
