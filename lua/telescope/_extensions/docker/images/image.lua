@@ -1,6 +1,7 @@
 local util = require "telescope._extensions.docker.util"
+local Item = require "telescope._extensions.docker.util.item"
 
----@class Image
+---@class Image : Item
 ---@field ID string
 ---@field Tag string
 ---@field Repository string
@@ -11,42 +12,41 @@ local util = require "telescope._extensions.docker.util"
 ---@field VirtualSize string
 ---@field UniqueSize string
 ---@field SharedSize string
-local Image = {}
-Image.__index = Image
+local Image = Item:new()
 
 ---@param json string: A json string
 ---@return Image
 function Image:new(json)
   json = util.preprocess_json(json)
-  local container
+  local image
   if vim.json.decode then
-    container = vim.json.decode(json)
+    image = vim.json.decode(json)
   else
     vim.schedule(function()
-      container = vim.fn.json_decode(json)
+      image = vim.fn.json_decode(json)
     end)
   end
-  return setmetatable(container or {}, Image)
-end
-
----@return string[]
-function Image:represent()
-  local lines = {}
-  table.insert(lines, "ID: " .. self.ID)
-  table.insert(lines, "Tag: " .. self.Tag)
-  table.insert(lines, "Repository: " .. self.Repository)
-  table.insert(lines, "CreatedAt: " .. self.CreatedAt)
-  table.insert(lines, "CreatedSince: " .. self.CreatedSince)
-  table.insert(lines, "Containers: " .. self.Containers)
-  table.insert(lines, "Digest: " .. self.Digest)
-  table.insert(lines, "VirtualSize: " .. self.VirtualSize)
-  table.insert(lines, "UniqueSize: " .. self.UniqueSize)
-  table.insert(lines, "SharedSize: " .. self.SharedSize)
-  return lines
+  image = image or {}
+  setmetatable(image, self)
+  self.__index = self
+  return image
 end
 
 function Image:name()
   return self.Repository .. ":" .. self.Tag
 end
+
+Image.fields = {
+  { name = "ID", key_hl = "Conditional", value_hl = "Number" },
+  { name = "Tag", key_hl = "Conditional", value_hl = "String" },
+  { name = "Repository", key_hl = "Conditional", value_hl = "String" },
+  { name = "CreatedAt", key_hl = "Conditional", value_hl = "String" },
+  { name = "CreatedSince", key_hl = "Conditional", value_hl = "String" },
+  { name = "Containers", key_hl = "Conditional", value_hl = "Number" },
+  { name = "Digest", key_hl = "Conditional", value_hl = "String" },
+  { name = "VirtualSize", key_hl = "Conditional", value_hl = "Number" },
+  { name = "UniqueSize", key_hl = "Conditional", value_hl = "Number" },
+  { name = "SharedSize", key_hl = "Conditional", value_hl = "Number" },
+}
 
 return Image

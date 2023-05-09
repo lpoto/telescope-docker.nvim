@@ -23,7 +23,6 @@ local dockerfiles_picker = function(options)
       "venv/",
       "target/",
       "dist/",
-      ".github/workflows/",
     }
   end
   if options.attach_mappings == nil then
@@ -34,6 +33,7 @@ local dockerfiles_picker = function(options)
   end
 
   options.prompt_title = name
+
   builtin.find_files(options)
 
   local picker = action_state.get_current_picker(vim.fn.bufnr())
@@ -45,11 +45,8 @@ end
 
 --- This overrides the telescope's default  result processor, so
 --- we can filter out the results that do not have the dockerfile filetype.
----
---- TODO: Determine how to do this more elengantly, without
---- having to load the files and check their filetype.
---- This also requires that the find command searches for files
---- by "ockerf" pattern, otherwise it is too slow.
+--- We ignore files whose names and contents do not match the dockerfile
+--- filetype.
 function get_result_processor(picker, find_id, prompt, status_updater)
   local count = 0
   local cb_add = function(score, entry)
@@ -89,13 +86,21 @@ function get_result_processor(picker, find_id, prompt, status_updater)
       end
     end
 
+    -- NOTE: load the file into a buffer and
+    -- detect it's filetype then wipe the buffer.
+    -- If the detected filetype is not dockerfile
+    -- then skip this entry.
     local buf = vim.api.nvim_create_buf(false, true)
     local ok, is_dockerfile = pcall(function()
-      local ft = ""
+      local ft = nil
+      -- NOTE: this won't trigger any autocommands
       vim.api.nvim_buf_call(buf, function()
-        vim.cmd("silent noautocmd e " .. file)
-        vim.cmd "filetype detect"
-        ft = vim.bo.filetype
+        vim.api.nvim_exec("noautocmd keepjumps e " .. file, true)
+        local filetype, _ = vim.filetype.match {
+          filename = file,
+          buf = buf,
+        }
+        ft = filetype
       end)
       return ft == "dockerfile"
     end)
