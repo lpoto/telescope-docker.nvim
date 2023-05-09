@@ -1,6 +1,5 @@
 local mappings = require "telescope._extensions.docker.compose.mappings"
 local builtin = require "telescope.builtin"
-local util = require "telescope._extensions.docker.util"
 local action_state = require "telescope.actions.state"
 local State = require "telescope._extensions.docker.util.docker_state"
 
