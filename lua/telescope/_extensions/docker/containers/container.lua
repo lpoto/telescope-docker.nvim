@@ -1,5 +1,7 @@
 local util = require "telescope._extensions.docker.util"
----@class Container
+local Item = require "telescope._extensions.docker.util.item"
+
+---@class Container : Item
 ---@field ID string
 ---@field Command string
 ---@field Names string
@@ -13,9 +15,7 @@ local util = require "telescope._extensions.docker.util"
 ---@field Size string
 ---@field Ports string
 ---@field LocalVolumes string
----@field env table?
-local Container = {}
-Container.__index = Container
+local Container = Item:new()
 
 ---@param json string: A json string
 ---@return Container
@@ -29,24 +29,33 @@ function Container:new(json)
       container = vim.fn.json_decode(json)
     end)
   end
-  return setmetatable(container or {}, Container)
+  container = container or {}
+  setmetatable(container, self)
+  self.__index = self
+  return container
 end
+
+Container.fields = {
+  { name = "ID", key_hl = "Conditional", value_hl = "Number" },
+  { name = "Names", key_hl = "Conditional", value_hl = "String" },
+  { name = "Status", key_hl = "Conditional", value_hl = "Function" },
+  { name = "Command", key_hl = "Conditional", value_hl = "String" },
+  { name = "CreatedAt", key_hl = "Conditional", value_hl = "String" },
+  { name = "RunningFor", key_hl = "Conditional", value_hl = "String" },
+  { name = "Image", key_hl = "Conditional", value_hl = "Number" },
+  { name = "Size", key_hl = "Conditional", value_hl = "String" },
+  { name = "Ports", key_hl = "Conditional", value_hl = "Number" },
+  { name = "Networks", key_hl = "Conditional", value_hl = "String" },
+  { name = "LocalVolumes", key_hl = "Conditional", value_hl = "Number" },
+  { name = "Labels", key_hl = "Conditional", value_hl = "String" },
+}
 
 ---@return string[]
 function Container:represent()
   local lines = {}
-  table.insert(lines, "ID: " .. self.ID)
-  table.insert(lines, "Names: " .. self.Names)
-  table.insert(lines, "State: " .. self.State)
-  table.insert(lines, "Command: " .. self.Command)
-  table.insert(lines, "CreatedAt: " .. self.CreatedAt)
-  table.insert(lines, "RunningFor: " .. self.RunningFor)
-  table.insert(lines, "Image: " .. self.Image)
-  table.insert(lines, "Size: " .. self.Size)
-  table.insert(lines, "Ports: " .. self.Ports)
-  table.insert(lines, "Networks: " .. self.Networks)
-  table.insert(lines, "LocalVolumes: " .. self.LocalVolumes)
-  table.insert(lines, "Labels: " .. self.Labels)
+  for _, field in pairs(self.fields) do
+    table.insert(lines, string.format("%s: %s", field.name, self[field.name]))
+  end
 
   if self.env then
     table.insert(lines, "")

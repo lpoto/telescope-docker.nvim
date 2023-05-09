@@ -1,5 +1,4 @@
 local previewers = require "telescope.previewers"
-local util = require "telescope._extensions.docker.util"
 
 local previewer = {}
 
@@ -16,22 +15,8 @@ function previewer.image_previewer()
   }
 end
 
----@param status table
----@param image Image
-local function display_image(status, image)
-  local lines = image:represent()
-  local buf = util.create_preview_buffer(lines)
-  if buf == nil or buf == -1 then
-    return
-  end
-  local ok, e = pcall(vim.api.nvim_win_set_buf, status.preview_win, buf)
-  if ok == false then
-    util.error(e)
-  end
-end
-
 preview_fn = function(self, entry, status)
-  display_image(status, entry.value)
+  entry.value:display(status)
 
   self.status = status
   self.state = self.state or {}

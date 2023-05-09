@@ -291,6 +291,8 @@ function State:fetch_images(callback)
             if json:len() > 0 then
               json = string.sub(json, 2, #json - 1)
               local image = Image:new(json)
+              local env = self:get_env()
+              image.env = env
               if image:name() == "<none>:<none>" then
                 table.insert(unnamed_images, image)
               else
