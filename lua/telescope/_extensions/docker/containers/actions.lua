@@ -316,7 +316,7 @@ function actions.logs(prompt_bufnr, ask_for_input)
   end
   local container = selection.value
   picker.docker_state:docker_command {
-    args = { "logs", container.ID },
+    args = { "logs", "--follow", container.ID },
     ask_for_input = ask_for_input,
   }
 end
