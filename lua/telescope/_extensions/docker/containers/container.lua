@@ -1,4 +1,3 @@
-local util = require "telescope._extensions.docker.util"
 local Item = require "telescope._extensions.docker.util.item"
 
 ---@class Container : Item
@@ -21,7 +20,6 @@ local Container = Item:new()
 ---@param json string: A json string
 ---@return Container
 function Container:new(json)
-  json = util.preprocess_json(json)
   local container
   if vim.json.decode then
     container = vim.json.decode(json)

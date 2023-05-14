@@ -1,4 +1,3 @@
-local util = require "telescope._extensions.docker.util"
 local Item = require "telescope._extensions.docker.util.item"
 
 ---@class Image : Item
@@ -17,7 +16,6 @@ local Image = Item:new()
 ---@param json string: A json string
 ---@return Image
 function Image:new(json)
-  json = util.preprocess_json(json)
   local image
   if vim.json.decode then
     image = vim.json.decode(json)

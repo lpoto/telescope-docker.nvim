@@ -217,28 +217,44 @@ function State:fetch_containers(callback)
       "--format='{{json . }}'",
     }
 
+    local err = nil
+    local err_count = 0
+
     local containers = {}
 
     local opts = {
       detach = false,
       on_stdout = function(_, data)
-        local ok, err = pcall(function()
-          for _, json in ipairs(data) do
-            if json:len() > 0 then
-              json = string.sub(json, 2, #json - 1)
+        if type(data) ~= "table" then
+          return
+        end
+        for _, json in ipairs(data) do
+          local ok, e = pcall(function()
+            json = util.preprocess_json(json)
+            if json ~= nil then
               local container = Container:new(json)
               local env = self:get_env()
               container.env = env
               table.insert(containers, container)
             end
+          end)
+          if not ok then
+            err = e
+            err_count = err_count + 1
           end
-        end)
-        if not ok then
-          util.warn("Error when decoding container: ", err)
         end
       end,
       on_exit = function()
+        if err_count > 0 then
+          util.warn(
+            err_count,
+            "error(s) occurred while fetching containers:",
+            err
+          )
+        end
+
         self.locked = false
+
         if callback then
           callback(containers)
         end
@@ -284,13 +300,19 @@ function State:fetch_images(callback)
     local images = {}
     local unnamed_images = {}
 
+    local err = nil
+    local err_count = 0
+
     local opts = {
       detach = false,
       on_stdout = function(_, data)
-        local ok, err = pcall(function()
-          for _, json in ipairs(data) do
-            if json:len() > 0 then
-              json = string.sub(json, 2, #json - 1)
+        if type(data) ~= "table" then
+          return
+        end
+        for _, json in ipairs(data) do
+          local ok, e = pcall(function()
+            json = util.preprocess_json(json)
+            if json ~= nil then
               local image = Image:new(json)
               local env = self:get_env()
               image.env = env
@@ -300,13 +322,18 @@ function State:fetch_images(callback)
                 table.insert(images, image)
               end
             end
+          end)
+          if not ok then
+            err = e
+            err_count = err_count + 1
           end
-        end)
-        if not ok then
-          util.warn("Error when decoding image: ", err)
         end
       end,
       on_exit = function()
+        if err_count > 0 then
+          util.warn(err_count, "error(s) occurred while fetching images:", err)
+        end
+
         self.locked = false
         local im = {}
         for _, image in ipairs(images) do

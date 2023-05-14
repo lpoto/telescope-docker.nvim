@@ -101,22 +101,18 @@ function notify(lvl, ...)
   end)
 end
 
---- Preprocess json string and remove double
---- quotations and special quotations that may
---- be outputted by docker on macOS
+---@param json string
+---@return string|nil
 function util.preprocess_json(json)
-  json = json:gsub("\r", "")
-  json = json:gsub("\n", "")
+  if type(json) ~= "string" or json:len() == 0 then
+    return nil
+  end
+  json = json:gsub("^.*{", "{")
+  json = json:gsub("}.*$", "}")
 
-  json = json:gsub("“", '"')
-  json = json:gsub("”", '"')
-
-  json = json:gsub('\\""', '"')
-  json = json:gsub('"\\"', '"')
-  json = json:gsub('""', '"')
-  json = json:gsub("''", "'")
-  json = json:gsub(':%s*"%s*,', ':"",')
-  json = json:gsub(":%s*'%s*,", ":'',")
+  if json:len() == 0 or string.sub(json, 1, 1) ~= "{" then
+    return nil
+  end
   return json
 end
 
