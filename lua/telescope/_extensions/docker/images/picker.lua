@@ -20,7 +20,11 @@ local available_images_telescope_picker = function(options)
   if options.host then
     env.DOCKER_HOST = options.host
   end
-  local docker_state = State:new(options.env)
+  local docker_state, err = State:new(options.env)
+  if err ~= nil then
+    util.error(err)
+    return
+  end
 
   docker_state:fetch_images(function(images_tbl)
     images_tbl = images_tbl or {}

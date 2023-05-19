@@ -25,7 +25,11 @@ local available_containers_telescope_picker = function(options)
   if options.host then
     options.env.DOCKER_HOST = options.host
   end
-  local docker_state = State:new(options.env)
+  local docker_state, err = State:new(options.env)
+  if err ~= nil then
+    util.error(err)
+    return
+  end
 
   docker_state:fetch_containers(function(containers_tbl)
     containers_tbl = containers_tbl or {}
