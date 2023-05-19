@@ -14,21 +14,38 @@ local State = {
   binary = "docker",
   locked = false,
   env = nil,
+  docker_version = nil,
 }
 State.__index = State
 
+---@return string
+function State.get_binary()
+  return setup.get_option "binary" or "docker"
+end
+
 ---@param env table?
 ---@return State
+---@return string?: Error message
 function State:new(env)
   local o = setmetatable({}, State)
-  local binary = setup.get_option "binary" or "docker"
+  local binary = State.get_binary()
   if type(binary) == "string" then
     o.binary = binary
   end
   if type(env) == "table" and next(env) then
     o.env = env
   end
-  return o
+  local err = nil
+  if not o.docker_version then
+    local version = o:version()
+    if type(version) ~= "string" then
+      err = "Failed to get docker version"
+    else
+      o.docker_version = version
+      State.docker_version = version
+    end
+  end
+  return o, err
 end
 
 ---@param env table?
@@ -373,6 +390,35 @@ function State:fetch_images(callback)
     return {}
   end
   return images
+end
+
+function State:version()
+  local ok, v = pcall(function()
+    local version = nil
+    local j
+    j = vim.fn.jobstart({
+      self.binary,
+      "--version",
+    }, {
+      on_stdout = function(_, data)
+        for _, d in ipairs(data) do
+          if type(d) == "string" and d:len() > 0 then
+            if version == nil then
+              version = d
+            else
+              version = version .. " " .. d
+            end
+          end
+        end
+      end,
+    })
+    vim.fn.jobwait({ j }, 2000)
+    return version
+  end)
+  if not ok or type(v) ~= "string" then
+    return nil
+  end
+  return v
 end
 
 return State

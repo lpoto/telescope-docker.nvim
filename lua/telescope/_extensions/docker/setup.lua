@@ -2,6 +2,8 @@ local util = require "telescope._extensions.docker.util"
 
 local setup = {}
 
+local called = false
+local errors = {}
 local opts = {}
 
 ---Creates the default picker options from the provided
@@ -9,8 +11,12 @@ local opts = {}
 ---the telescope theme identified by that value is added to the options.
 ---@param o table
 function setup.setup(o)
+  called = true
+  errors = {}
   if type(o) ~= "table" then
-    util.warn "Containers config should be a table!"
+    local msg = "Telescope docker config should be a table!"
+    table.insert(errors, msg)
+    util.warn(msg)
     return
   end
 
@@ -23,7 +29,9 @@ function setup.setup(o)
     o.init_term = nil
   end
   if o.log_level ~= nil and type(o.log_level) ~= "number" then
-    util.warn "'log_level' should be number"
+    local msg = "'log_level' should be number"
+    table.insert(errors, msg)
+    util.warn(msg)
   else
     util.set_log_level(o.log_level)
   end
@@ -34,7 +42,9 @@ function setup.setup(o)
   if type(o.theme) == "string" then
     local theme = require("telescope.themes")["get_" .. o.theme]
     if theme == nil then
-      util.warn("No such telescope theme: ", o.name)
+      local msg = "No such telescope theme: " .. o.theme
+      table.insert(errors, msg)
+      util.warn(msg)
     else
       o = theme(o)
     end
@@ -60,6 +70,16 @@ end
 ---@param o table?
 function setup.call_with_opts(callback, o)
   return callback(vim.tbl_extend("force", opts, o or {}))
+end
+
+---@return string[]
+function setup.errors()
+  return errors
+end
+
+---@return boolean
+function setup.called()
+  return called
 end
 
 return setup

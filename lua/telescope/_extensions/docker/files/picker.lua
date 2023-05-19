@@ -1,4 +1,5 @@
 local mappings = require "telescope._extensions.docker.files.mappings"
+local util = require "telescope._extensions.docker.util"
 local builtin = require "telescope.builtin"
 local action_state = require "telescope.actions.state"
 local State = require "telescope._extensions.docker.util.docker_state"
@@ -25,6 +26,13 @@ local dockerfiles_picker = function(options)
       "dist/",
     }
   end
+
+  local docker_state, err = State:new(options.env)
+  if err ~= nil then
+    util.error(err)
+    return
+  end
+
   if options.attach_mappings == nil then
     options.attach_mappings = mappings.attach_mappings
   end
@@ -38,7 +46,7 @@ local dockerfiles_picker = function(options)
 
   local picker = action_state.get_current_picker(vim.fn.bufnr())
   if type(picker) == "table" and picker.prompt_title == name then
-    picker.docker_state = State:new(options.env)
+    picker.docker_state = docker_state
     picker.get_result_processor = get_result_processor
   end
 end

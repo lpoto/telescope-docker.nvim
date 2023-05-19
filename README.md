@@ -63,6 +63,8 @@ require("telescope").extensions.docker.containers(--[[opts...]])
 --require("telescope").extensions.docker.files(...)
 ```
 
+> NOTE: try `:checkhealth telescope-docker` if you encounter any issues.
+
 ## Changing docker environment
 
 A table of environment variables may be passed to the pickers:
