@@ -39,9 +39,7 @@ function util.open_in_shell(command, init_term, opts)
   end
 
   opts = opts or {}
-  if opts.detatch == nil then
-    opts.detach = false
-  end
+  opts.detach = opts.detach or false
 
   local init_term_f
   if type(init_term) ~= "function" then
@@ -51,18 +49,18 @@ function util.open_in_shell(command, init_term, opts)
     then
       init_term = "tabnew"
     end
-    init_term_f = function(cmd)
+    init_term_f = function(cmd, o)
       vim.api.nvim_exec("noautocmd keepjumps " .. init_term, false)
       local buf = vim.api.nvim_get_current_buf()
       pcall(vim.api.nvim_buf_set_option, buf, "buftype", "nofile")
       pcall(vim.api.nvim_buf_set_option, buf, "bufhidden", "wipe")
-      local job_id = vim.fn.termopen(cmd, opts)
+      local job_id = vim.fn.termopen(cmd, o)
       vim.api.nvim_create_autocmd({ "BufUnload", "BufHidden" }, {
         buffer = buf,
         once = true,
         callback = function()
           vim.schedule(function()
-            pcall(vim.fn.jobstop, job_id)
+            vim.fn.jobstop(job_id)
             vim.defer_fn(function()
               pcall(vim.api.nvim_buf_delete, buf, { force = true })
             end, 10)
@@ -73,7 +71,7 @@ function util.open_in_shell(command, init_term, opts)
   else
     init_term_f = init_term
   end
-  init_term_f(command)
+  init_term_f(command, opts)
 end
 
 function notify(lvl, ...)
