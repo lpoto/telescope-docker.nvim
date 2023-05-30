@@ -400,6 +400,7 @@ function State:version()
       self.binary,
       "--version",
     }, {
+      detach = false,
       on_stdout = function(_, data)
         for _, d in ipairs(data) do
           if type(d) == "string" and d:len() > 0 then
