@@ -8,6 +8,7 @@ local telescope_actions = require "telescope.actions"
 local actions = {}
 
 local select_container
+local new_action
 
 ---Open a popup through which a docker container action
 ---may be selected.
@@ -53,225 +54,18 @@ end
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean?: Whether to ask for input
 function actions.start(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State ~= "exited" then
-    util.warn "Container is already running"
-    return
-  end
-  local args = { "start", container.ID }
-  picker.docker_state:docker_job {
-    item = container,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Starting container: " .. container.ID,
-    end_msg = "Container " .. container.ID .. " started",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.pause(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State ~= "running" then
-    util.warn "Container is not running"
-    return
-  end
-  local args = { "pause", container.ID }
-  picker.docker_state:docker_job {
-    item = container,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Pausing container: " .. container.ID,
-    end_msg = "Container " .. container.ID .. " paused",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.unpause(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State ~= "paused" then
-    util.warn "Container is not paused"
-    return
-  end
-  local args = { "unpause", container.ID }
-  picker.docker_state:docker_job {
-    item = container,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Unpausing container: " .. container.ID,
-    end_msg = "Container " .. container.ID .. " unpaused",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.stop(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State == "exited" then
-    util.warn "Container is not running"
-    return
-  end
-  local args = { "stop", container.ID }
-  picker.docker_state:docker_job {
-    item = container,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Stopping container: " .. container.ID,
-    end_msg = "Container " .. container.ID .. " stopped",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.kill(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State == "exited" then
-    util.warn "Container is not running"
-    return
-  end
-  local args = { "kill", container.ID }
-  picker.docker_state:docker_job {
-    item = container,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Killing container: " .. container.ID,
-    end_msg = "Container " .. container.ID .. " killed",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.delete(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State ~= "exited" then
-    util.warn "Container is not exited"
-    return
-  end
-  local args = { "rm", container.ID }
-  picker.docker_state:docker_job {
-    item = container,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Removing container: " .. container.ID,
-    end_msg = "Container " .. container.ID .. " removed",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.rename(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-
-  local container = selection.value
-
-  picker.docker_state:binary(function(binary)
-    local rename = vim.fn.input {
-      prompt = binary .. " rename " .. container.ID .. " ",
-      default = "",
-      cancelreturn = "",
-    }
-    if type(rename) ~= "string" or rename == "" then
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State ~= "exited" then
+      util.warn "Container is already running"
       return
     end
-    local args = {
-      "rename",
-      container.ID,
-      unpack(vim.split(rename, " ")),
-    }
+    local args = { "start", container.ID }
     picker.docker_state:docker_job {
       item = container,
       args = args,
       ask_for_input = ask_for_input,
-      start_msg = "Renaming container: " .. container.ID,
-      end_msg = "Container " .. container.ID .. " renamed",
+      start_msg = "Starting container: " .. container.ID,
+      end_msg = "Container " .. container.ID .. " started",
       callback = function()
         actions.refresh_picker(prompt_bufnr)
       end,
@@ -281,110 +75,216 @@ end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean?: Whether to ask for input
+function actions.pause(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State ~= "running" then
+      util.warn "Container is not running"
+      return
+    end
+    local args = { "pause", container.ID }
+    picker.docker_state:docker_job {
+      item = container,
+      args = args,
+      ask_for_input = ask_for_input,
+      start_msg = "Pausing container: " .. container.ID,
+      end_msg = "Container " .. container.ID .. " paused",
+      callback = function()
+        actions.refresh_picker(prompt_bufnr)
+      end,
+    }
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.unpause(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State ~= "paused" then
+      util.warn "Container is not paused"
+      return
+    end
+    local args = { "unpause", container.ID }
+    picker.docker_state:docker_job {
+      item = container,
+      args = args,
+      ask_for_input = ask_for_input,
+      start_msg = "Unpausing container: " .. container.ID,
+      end_msg = "Container " .. container.ID .. " unpaused",
+      callback = function()
+        actions.refresh_picker(prompt_bufnr)
+      end,
+    }
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.stop(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State == "exited" then
+      util.warn "Container is not running"
+      return
+    end
+    local args = { "stop", container.ID }
+    picker.docker_state:docker_job {
+      item = container,
+      args = args,
+      ask_for_input = ask_for_input,
+      start_msg = "Stopping container: " .. container.ID,
+      end_msg = "Container " .. container.ID .. " stopped",
+      callback = function()
+        actions.refresh_picker(prompt_bufnr)
+      end,
+    }
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.kill(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State == "exited" then
+      util.warn "Container is not running"
+      return
+    end
+    local args = { "kill", container.ID }
+    picker.docker_state:docker_job {
+      item = container,
+      args = args,
+      ask_for_input = ask_for_input,
+      start_msg = "Killing container: " .. container.ID,
+      end_msg = "Container " .. container.ID .. " killed",
+      callback = function()
+        actions.refresh_picker(prompt_bufnr)
+      end,
+    }
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.delete(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State ~= "exited" then
+      util.warn "Container is not exited"
+      return
+    end
+    local args = { "rm", container.ID }
+    picker.docker_state:docker_job {
+      item = container,
+      args = args,
+      ask_for_input = ask_for_input,
+      start_msg = "Removing container: " .. container.ID,
+      end_msg = "Container " .. container.ID .. " removed",
+      callback = function()
+        actions.refresh_picker(prompt_bufnr)
+      end,
+    }
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.rename(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(container, picker)
+    picker.docker_state:binary(function(binary)
+      local rename = vim.fn.input {
+        prompt = binary .. " rename " .. container.ID .. " ",
+        default = "",
+        cancelreturn = "",
+      }
+      if type(rename) ~= "string" or rename == "" then
+        return
+      end
+      local args = {
+        "rename",
+        container.ID,
+        unpack(vim.split(rename, " ")),
+      }
+      picker.docker_state:docker_job {
+        item = container,
+        args = args,
+        ask_for_input = ask_for_input,
+        start_msg = "Renaming container: " .. container.ID,
+        end_msg = "Container " .. container.ID .. " renamed",
+        callback = function()
+          actions.refresh_picker(prompt_bufnr)
+        end,
+      }
+    end)
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
 function actions.attach(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State ~= "running" then
-    util.warn "Container is not running"
-    return
-  end
-  picker.docker_state:docker_command {
-    args = { "attach", container.ID },
-    ask_for_input = ask_for_input,
-  }
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State ~= "running" then
+      util.warn "Container is not running"
+      return
+    end
+    picker.docker_state:docker_command {
+      args = { "attach", container.ID },
+      ask_for_input = ask_for_input,
+    }
+  end)
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean?: Whether to ask for input
 function actions.logs(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  picker.docker_state:docker_command {
-    args = { "logs", "--follow", container.ID },
-    ask_for_input = ask_for_input,
-  }
+  new_action(prompt_bufnr, function(container, picker)
+    picker.docker_state:docker_command {
+      args = { "logs", "--follow", container.ID },
+      ask_for_input = ask_for_input,
+    }
+  end)
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean?: Whether to ask for input
 function actions.stats(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State == "exited" then
-    util.warn "Container is exited"
-    return
-  end
-  picker.docker_state:docker_command {
-    args = { "stats", container.ID },
-    ask_for_input = ask_for_input,
-  }
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State == "exited" then
+      util.warn "Container is exited"
+      return
+    end
+    picker.docker_state:docker_command {
+      args = { "stats", container.ID },
+      ask_for_input = ask_for_input,
+    }
+  end)
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean?: Whether to ask for input
 function actions.exec(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local container = selection.value
-  if container.State ~= "running" then
-    util.warn "Container is not running"
-    return
-  end
-
-  picker.docker_state:binary(function(binary)
-    local exec = vim.fn.input {
-      prompt = binary .. " exec -it " .. container.ID .. " ",
-      default = "",
-      cancelreturn = "",
-    }
-    if type(exec) ~= "string" or exec:len() == 0 then
+  new_action(prompt_bufnr, function(container, picker)
+    if container.State ~= "running" then
+      util.warn "Container is not running"
       return
     end
-    local args = {
-      "exec",
-      "-it",
-      container.ID,
-      unpack(vim.split(exec, " ")),
-    }
-    picker.docker_state:docker_command {
-      args = args,
-      ask_for_input = ask_for_input,
-    }
+
+    picker.docker_state:binary(function(binary)
+      local exec = vim.fn.input {
+        prompt = binary .. " exec -it " .. container.ID .. " ",
+        default = "",
+        cancelreturn = "",
+      }
+      if type(exec) ~= "string" or exec:len() == 0 then
+        return
+      end
+      local args = {
+        "exec",
+        "-it",
+        container.ID,
+        unpack(vim.split(exec, " ")),
+      }
+      picker.docker_state:docker_command {
+        args = args,
+        ask_for_input = ask_for_input,
+      }
+    end)
   end)
 end
 
@@ -473,6 +373,24 @@ function select_container(prompt_bufnr, options)
       actions.unpause(prompt_bufnr, ask_for_input)
     end
   end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param callback fun(container: Container, picker: Picker)
+function new_action(prompt_bufnr, callback)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  ---@type Container
+  local container = selection.value
+  return callback(container, picker)
 end
 
 return actions

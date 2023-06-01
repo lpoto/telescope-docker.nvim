@@ -8,6 +8,7 @@ local telescope_actions = require "telescope.actions"
 local actions = {}
 
 local select_image
+local new_action
 
 ---Open a popup through which a docker image action
 ---may be selected.
@@ -73,97 +74,24 @@ end
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean?: Whether to ask for input
 function actions.delete(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local image = selection.value
-  local args = { "image", "rm" }
-  local name = image:name()
-  local start_msg = "Removing image: " .. name
-  local end_msg = "Image " .. name .. " removed"
-  if name == "<none>:<none>" then
-    table.insert(args, image.ID)
-    start_msg = "Removing image: " .. image.ID
-    end_msg = "Image " .. image.ID .. " removed"
-  else
-    table.insert(args, name)
-  end
-  picker.docker_state:docker_job {
-    item = image,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = start_msg,
-    end_msg = end_msg,
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.history(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local image = selection.value
-  local args = { "image", "history", image.ID }
-  picker.docker_state:docker_command {
-    args = args,
-    ask_for_input = ask_for_input,
-  }
-end
-
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param ask_for_input boolean?: Whether to ask for input
-function actions.retag(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local image = selection.value
-
-  picker.docker_state:binary(function(binary)
-    local retag = vim.fn.input {
-      prompt = binary .. " image tag " .. image:name() .. " ",
-      default = "",
-      cancelreturn = "",
-    }
-    if type(retag) ~= "string" or retag:len() == 0 then
-      return
+  new_action(prompt_bufnr, function(image, picker)
+    local args = { "image", "rm" }
+    local name = image:name()
+    local start_msg = "Removing image: " .. name
+    local end_msg = "Image " .. name .. " removed"
+    if name == "<none>:<none>" then
+      table.insert(args, image.ID)
+      start_msg = "Removing image: " .. image.ID
+      end_msg = "Image " .. image.ID .. " removed"
+    else
+      table.insert(args, name)
     end
-    local args = {
-      "image",
-      "tag",
-      image:name(),
-      unpack(vim.split(retag, " ")),
-    }
     picker.docker_state:docker_job {
       item = image,
       args = args,
       ask_for_input = ask_for_input,
-      start_msg = "Retagging image: " .. image.ID,
-      end_msg = "Image " .. image.ID .. " retagged",
+      start_msg = start_msg,
+      end_msg = end_msg,
       callback = function()
         actions.refresh_picker(prompt_bufnr)
       end,
@@ -173,23 +101,59 @@ end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean?: Whether to ask for input
+function actions.history(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(image, picker)
+    local args = { "image", "history", image.ID }
+    picker.docker_state:docker_command {
+      args = args,
+      ask_for_input = ask_for_input,
+    }
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
+function actions.retag(prompt_bufnr, ask_for_input)
+  new_action(prompt_bufnr, function(image, picker)
+    picker.docker_state:binary(function(binary)
+      local retag = vim.fn.input {
+        prompt = binary .. " image tag " .. image:name() .. " ",
+        default = "",
+        cancelreturn = "",
+      }
+      if type(retag) ~= "string" or retag:len() == 0 then
+        return
+      end
+      local args = {
+        "image",
+        "tag",
+        image:name(),
+        unpack(vim.split(retag, " ")),
+      }
+      picker.docker_state:docker_job {
+        item = image,
+        args = args,
+        ask_for_input = ask_for_input,
+        start_msg = "Retagging image: " .. image.ID,
+        end_msg = "Image " .. image.ID .. " retagged",
+        callback = function()
+          actions.refresh_picker(prompt_bufnr)
+        end,
+      }
+    end)
+  end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param ask_for_input boolean?: Whether to ask for input
 function actions.push(prompt_bufnr, ask_for_input)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  local image = selection.value
-  local args = { "push", image:name() }
-  picker.docker_state:docker_command {
-    args = args,
-    ask_for_input = ask_for_input,
-  }
+  new_action(prompt_bufnr, function(image, picker)
+    local args = { "push", image:name() }
+    picker.docker_state:docker_command {
+      args = args,
+      ask_for_input = ask_for_input,
+    }
+  end)
 end
 
 function actions.get_picker(prompt_bufnr)
@@ -214,6 +178,24 @@ function select_image(prompt_bufnr, options)
       actions.push(prompt_bufnr, ask_for_input)
     end
   end)
+end
+
+---@param prompt_bufnr number: The telescope prompt's buffer number
+---@param callback fun(image: Image, picker: Picker)
+function new_action(prompt_bufnr, callback)
+  local selection = action_state.get_selected_entry()
+  local picker = actions.get_picker(prompt_bufnr)
+  if
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
+  then
+    return
+  end
+  ---@type Image
+  local image = selection.value
+  return callback(image, picker)
 end
 
 return actions

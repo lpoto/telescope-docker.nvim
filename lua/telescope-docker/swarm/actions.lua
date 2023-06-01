@@ -150,10 +150,10 @@ function new_action(prompt_bufnr, callback)
   local selection = action_state.get_selected_entry()
   local picker = actions.get_picker(prompt_bufnr)
   if
-      not picker
-      or not picker.docker_state
-      or not selection
-      or not selection.value
+    not picker
+    or not picker.docker_state
+    or not selection
+    or not selection.value
   then
     return
   end
