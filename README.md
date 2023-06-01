@@ -50,7 +50,8 @@ require("telescope").load_extension "docker"
 Then use the extension:
 
 ```lua
-:Telescope docker containers
+:Telescope docker
+-- :Telescope docker containers
 -- :Telescope docker images
 -- :Telescope docker swarm
 -- :Telescope docker machines
@@ -61,7 +62,8 @@ Then use the extension:
 or with lua:
 
 ```lua
-require("telescope").extensions.docker.containers(--[[opts...]])
+require("telescope").extensions.docker.docker(--[[opts...]])
+--require("telescope").extensions.docker.containers(...)
 --require("telescope").extensions.docker.images(...)
 --require("telescope").extensions.docker.swarm(...)
 --require("telescope").extensions.docker.machines(...)

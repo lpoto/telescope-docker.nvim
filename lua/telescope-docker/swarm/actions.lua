@@ -4,10 +4,11 @@ local popup = require "telescope-docker.util.popup"
 local action_state = require "telescope.actions.state"
 local finder = require "telescope-docker.swarm.finder"
 local telescope_actions = require "telescope.actions"
+local telescope_utils = require "telescope-docker.util.telescope"
+
 local actions = {}
 
 local select_node
-local new_action
 
 ---Open a popup through which a docker node action
 ---may be selected.
@@ -27,101 +28,131 @@ end
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean: Whether or not to ask for input
 function actions.inspect_node(prompt_bufnr, ask_for_input)
-  new_action(prompt_bufnr, function(node, picker)
-    picker.docker_state:docker_command {
-      args = { "node", "inspect", node.ID },
-      ask_for_input = ask_for_input,
-    }
-  end)
+  telescope_utils.new_action(
+    prompt_bufnr,
+    ---@param node Node
+    ---@param picker table
+    function(node, picker)
+      picker.docker_state:docker_command {
+        args = { "node", "inspect", node.ID },
+        ask_for_input = ask_for_input,
+      }
+    end
+  )
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean: Whether or not to ask for input
 function actions.update_node(prompt_bufnr, ask_for_input)
-  new_action(prompt_bufnr, function(node, picker)
-    picker.docker_state:docker_job {
-      item = node,
-      args = { "node", "update", node.ID },
-      ask_for_input = ask_for_input,
-      start_msg = "Updating node: " .. node.ID,
-      end_msg = "Node " .. node.ID .. " updated",
-      callback = function()
-        actions.refresh_picker(prompt_bufnr)
-      end,
-    }
-  end)
+  telescope_utils.new_action(
+    prompt_bufnr,
+    ---@param node Node
+    ---@param picker table
+    function(node, picker)
+      picker.docker_state:docker_job {
+        item = node,
+        args = { "node", "update", node.ID },
+        ask_for_input = ask_for_input,
+        start_msg = "Updating node: " .. node.ID,
+        end_msg = "Node " .. node.ID .. " updated",
+        callback = function()
+          actions.refresh_picker(prompt_bufnr)
+        end,
+      }
+    end
+  )
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean: Whether or not to ask for input
 function actions.promote_node(prompt_bufnr, ask_for_input)
-  new_action(prompt_bufnr, function(node, picker)
-    picker.docker_state:docker_job {
-      item = node,
-      args = { "node", "demote", node.ID },
-      ask_for_input = ask_for_input,
-      start_msg = "Promoting node: " .. node.ID,
-      end_msg = "Node " .. node.ID .. " promoted",
-      callback = function()
-        actions.refresh_picker(prompt_bufnr)
-      end,
-    }
-  end)
+  telescope_utils.new_action(
+    prompt_bufnr,
+    ---@param node Node
+    ---@param picker table
+    function(node, picker)
+      picker.docker_state:docker_job {
+        item = node,
+        args = { "node", "demote", node.ID },
+        ask_for_input = ask_for_input,
+        start_msg = "Promoting node: " .. node.ID,
+        end_msg = "Node " .. node.ID .. " promoted",
+        callback = function()
+          actions.refresh_picker(prompt_bufnr)
+        end,
+      }
+    end
+  )
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean: Whether or not to ask for input
 function actions.demote_node(prompt_bufnr, ask_for_input)
-  new_action(prompt_bufnr, function(node, picker)
-    picker.docker_state:docker_job {
-      item = node,
-      args = { "node", "demote", node.ID },
-      ask_for_input = ask_for_input,
-      start_msg = "Demoting node: " .. node.ID,
-      end_msg = "Node " .. node.ID .. " demoted",
-      callback = function()
-        actions.refresh_picker(prompt_bufnr)
-      end,
-    }
-  end)
+  telescope_utils.new_action(
+    prompt_bufnr,
+    ---@param node Node
+    ---@param picker table
+    function(node, picker)
+      picker.docker_state:docker_job {
+        item = node,
+        args = { "node", "demote", node.ID },
+        ask_for_input = ask_for_input,
+        start_msg = "Demoting node: " .. node.ID,
+        end_msg = "Node " .. node.ID .. " demoted",
+        callback = function()
+          actions.refresh_picker(prompt_bufnr)
+        end,
+      }
+    end
+  )
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean: Whether or not to ask for input
 function actions.list_tasks(prompt_bufnr, ask_for_input)
-  new_action(prompt_bufnr, function(node, picker)
-    picker.docker_state:docker_command {
-      args = { "node", "ps", node.ID },
-      ask_for_input = ask_for_input,
-    }
-  end)
+  telescope_utils.new_action(
+    prompt_bufnr,
+    ---@param node Node
+    ---@param picker table
+    function(node, picker)
+      picker.docker_state:docker_command {
+        args = { "node", "ps", node.ID },
+        ask_for_input = ask_for_input,
+      }
+    end
+  )
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 ---@param ask_for_input boolean: Whether or not to ask for input
 function actions.remove(prompt_bufnr, ask_for_input)
-  new_action(prompt_bufnr, function(node, picker)
-    local choice = vim.fn.confirm(
-      "Are you sure you want to remove " .. vim.inspect(node.ID) .. "?",
-      "&Yes\n&No"
-    )
-    if choice ~= 1 then
-      return
+  telescope_utils.new_action(
+    prompt_bufnr,
+    ---@param node Node
+    ---@param picker table
+    function(node, picker)
+      local choice = vim.fn.confirm(
+        "Are you sure you want to remove " .. vim.inspect(node.ID) .. "?",
+        "&Yes\n&No"
+      )
+      if choice ~= 1 then
+        return
+      end
+
+      local args = { "node", "rm", node.ID }
+
+      picker.docker_state:docker_job {
+        item = node,
+        args = args,
+        ask_for_input = ask_for_input,
+        start_msg = "Removing node: " .. node.ID,
+        end_msg = "Node " .. node.ID .. " removed",
+        callback = function()
+          actions.refresh_picker(prompt_bufnr)
+        end,
+      }
     end
-
-    local args = { "node", "rm", node.ID }
-
-    picker.docker_state:docker_job {
-      item = node,
-      args = args,
-      ask_for_input = ask_for_input,
-      start_msg = "Removing node: " .. node.ID,
-      end_msg = "Node " .. node.ID .. " removed",
-      callback = function()
-        actions.refresh_picker(prompt_bufnr)
-      end,
-    }
-  end)
+  )
 end
 
 ---@param prompt_bufnr number
@@ -144,37 +175,11 @@ function select_node(prompt_bufnr, options)
   end)
 end
 
----@param prompt_bufnr number: The telescope prompt's buffer number
----@param callback fun(node: Node, picker: Picker)
-function new_action(prompt_bufnr, callback)
-  local selection = action_state.get_selected_entry()
-  local picker = actions.get_picker(prompt_bufnr)
-  if
-    not picker
-    or not picker.docker_state
-    or not selection
-    or not selection.value
-  then
-    return
-  end
-  ---@type Node
-  local node = selection.value
-  return callback(node, picker)
-end
-
-function actions.get_picker(prompt_bufnr)
-  if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
-    prompt_bufnr = vim.api.nvim_get_current_buf()
-  end
-  local p = action_state.get_current_picker(prompt_bufnr)
-  return p
-end
-
 ---Asynchronously refresh the nodes picker.
 ---
 ---@param prompt_bufnr number: The telescope prompt's buffer number
 function actions.refresh_picker(prompt_bufnr)
-  local picker = actions.get_picker(prompt_bufnr)
+  local picker = telescope_utils.get_picker(prompt_bufnr)
   if not picker or not picker.docker_state then
     return
   end
