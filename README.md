@@ -52,6 +52,7 @@ Then use the extension:
 ```lua
 :Telescope docker containers
 -- :Telescope docker images
+-- :Telescope docker swarm
 -- :Telescope docker machines
 -- :Telescope docker compose
 -- :Telescope docker files
@@ -62,6 +63,7 @@ or with lua:
 ```lua
 require("telescope").extensions.docker.containers(--[[opts...]])
 --require("telescope").extensions.docker.images(...)
+--require("telescope").extensions.docker.swarm(...)
 --require("telescope").extensions.docker.machines(...)
 --require("telescope").extensions.docker.compose(...)
 --require("telescope").extensions.docker.files(...)
@@ -113,6 +115,7 @@ vim.g.docker_env = {
 > The same works for fetching images.
 
 ## Roadmap
+
 - [x] containers
 - [x] images
 - [x] Dockerfiles
