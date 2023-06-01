@@ -1,6 +1,7 @@
 local util = require "telescope-docker.util"
 local finder = require "telescope-docker.default.finder"
 local mappings = require "telescope-docker.default.mappings"
+local DockerPicker = require "telescope-docker.util.docker_picker"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
@@ -34,16 +35,23 @@ local function default_picker(options)
   picker:find()
 end
 
+---@param all_pickers DockerPicker[]
 return function(all_pickers)
   pickers_tbl = {}
-  for k, v in pairs(all_pickers) do
-    table.insert(pickers_tbl, {
-      name = k,
-      picker = v,
-    })
+  for _, p in pairs(all_pickers) do
+    table.insert(pickers_tbl, p)
   end
   table.sort(pickers_tbl, function(a, b)
-    return string.sub(a.name, 1, 1) < string.sub(b.name, 1, 1)
+    local a_1 = string.sub(a.name, 1, 1)
+    local b_1 = string.sub(b.name, 1, 1)
+    if a_1 == b_1 then
+      return a.name > b.name
+    end
+    return a_1 < b_1
   end)
-  return default_picker
+  return DockerPicker:new {
+    picker_fn = default_picker,
+    name = "default",
+    description = "Available docker pickers",
+  }
 end

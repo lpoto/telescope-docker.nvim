@@ -22,9 +22,13 @@ end
 
 return telescope.register_extension {
   setup = setup.setup,
-  exports = vim.tbl_map(function(fn)
-    return function(opts)
-      return setup.call_with_opts(fn, opts or {})
-    end
-  end, pickers),
+  exports = vim.tbl_map(
+    ---@param docker_picker DockerPicker
+    function(docker_picker)
+      return function(opts)
+        docker_picker:run(opts)
+      end
+    end,
+    pickers
+  ),
 }

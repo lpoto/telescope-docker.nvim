@@ -1,8 +1,8 @@
 local mappings = require "telescope-docker.compose.mappings"
-local util = require "telescope-docker.util"
 local builtin = require "telescope.builtin"
 local action_state = require "telescope.actions.state"
 local State = require "telescope-docker.util.docker_state"
+local DockerPicker = require "telescope-docker.util.docker_picker"
 
 local get_result_processor
 local name = "Docker compose files"
@@ -31,11 +31,6 @@ local docker_compose_picker = function(options)
   end
 
   local docker_state = State:new(options.env)
-  local _, err = docker_state:compose_binary()
-  if err ~= nil then
-    util.error(err)
-    return
-  end
 
   if options.attach_mappings == nil then
     options.attach_mappings = mappings.attach_mappings
@@ -122,6 +117,12 @@ function get_result_processor(picker, find_id, prompt, status_updater)
   end
 end
 
-return function(opts)
-  docker_compose_picker(opts)
-end
+return DockerPicker:new {
+  picker_fn = docker_compose_picker,
+  name = "compose",
+  description = "Docker compose files in subdirectories",
+  condition = function()
+    local _, err, warn = State:compose_binary()
+    return err, warn
+  end,
+}
