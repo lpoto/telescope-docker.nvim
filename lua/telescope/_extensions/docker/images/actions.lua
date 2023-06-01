@@ -143,31 +143,33 @@ function actions.retag(prompt_bufnr, ask_for_input)
     return
   end
   local image = selection.value
-  local binary = setup.get_option "binary" or "docker"
-  local retag = vim.fn.input {
-    prompt = binary .. " image tag " .. image:name() .. " ",
-    default = "",
-    cancelreturn = "",
-  }
-  if type(retag) ~= "string" or retag:len() == 0 then
-    return
-  end
-  local args = {
-    "image",
-    "tag",
-    image:name(),
-    unpack(vim.split(retag, " ")),
-  }
-  picker.docker_state:docker_job {
-    item = image,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Retagging image: " .. image.ID,
-    end_msg = "Image " .. image.ID .. " retagged",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
+
+  picker.docker_state:binary(function(binary)
+    local retag = vim.fn.input {
+      prompt = binary .. " image tag " .. image:name() .. " ",
+      default = "",
+      cancelreturn = "",
+    }
+    if type(retag) ~= "string" or retag:len() == 0 then
+      return
+    end
+    local args = {
+      "image",
+      "tag",
+      image:name(),
+      unpack(vim.split(retag, " ")),
+    }
+    picker.docker_state:docker_job {
+      item = image,
+      args = args,
+      ask_for_input = ask_for_input,
+      start_msg = "Retagging image: " .. image.ID,
+      end_msg = "Image " .. image.ID .. " retagged",
+      callback = function()
+        actions.refresh_picker(prompt_bufnr)
+      end,
+    }
+  end)
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number

@@ -25,25 +25,30 @@ function health.check()
     vim.health.ok "Telescope loaded"
   end
 
-  -- NOTE: ensure docker binary is executable
-  local binary = State.get_binary()
-  if type(binary) ~= "string" or vim.fn.executable(binary) ~= 1 then
-    vim.health.error(
-      "Docker binary not executable: " .. vim.inspect(binary),
-      { "Set a different binary in the plugin's setup" }
-    )
-  else
+  local state = State:new()
+  local ok, err = state:binary(function(binary, version)
     vim.health.ok("Executable docker binary: " .. vim.inspect(binary))
+    vim.health.ok("Docker version: " .. vim.inspect(version))
+    return true
+  end)
+  if not ok and type(err) == "string" then
+    vim.health.error(err, {
+      "Change the docker binary",
+    })
   end
 
-  -- NOTE: ensure docker binary is valid
-  local state, err = State:new()
-  if err ~= nil then
+  ok, err, warn = state:compose_binary(function(binary, version)
+    vim.health.ok("Executable compose binary: " .. vim.inspect(binary))
+    vim.health.ok("Compose version: " .. vim.inspect(version))
+    return true
+  end)
+  if not ok and type(err) == "string" then
     vim.health.error(err, {
-      "Check if the binary is a valid docker binary",
+      "Change the compose binary",
     })
-  else
-    vim.health.ok("Docker version: " .. vim.inspect(state.docker_version))
+  end
+  if type(warn) == "string" then
+    vim.health.warn(warn)
   end
 end
 

@@ -250,31 +250,34 @@ function actions.rename(prompt_bufnr, ask_for_input)
   then
     return
   end
+
   local container = selection.value
-  local binary = setup.get_option "binary" or "docker"
-  local rename = vim.fn.input {
-    prompt = binary .. " rename " .. container.ID .. " ",
-    default = "",
-    cancelreturn = "",
-  }
-  if type(rename) ~= "string" or rename == "" then
-    return
-  end
-  local args = {
-    "rename",
-    container.ID,
-    unpack(vim.split(rename, " ")),
-  }
-  picker.docker_state:docker_job {
-    item = container,
-    args = args,
-    ask_for_input = ask_for_input,
-    start_msg = "Renaming container: " .. container.ID,
-    end_msg = "Container " .. container.ID .. " renamed",
-    callback = function()
-      actions.refresh_picker(prompt_bufnr)
-    end,
-  }
+
+  picker.docker_state:binary(function(binary)
+    local rename = vim.fn.input {
+      prompt = binary .. " rename " .. container.ID .. " ",
+      default = "",
+      cancelreturn = "",
+    }
+    if type(rename) ~= "string" or rename == "" then
+      return
+    end
+    local args = {
+      "rename",
+      container.ID,
+      unpack(vim.split(rename, " ")),
+    }
+    picker.docker_state:docker_job {
+      item = container,
+      args = args,
+      ask_for_input = ask_for_input,
+      start_msg = "Renaming container: " .. container.ID,
+      end_msg = "Container " .. container.ID .. " renamed",
+      callback = function()
+        actions.refresh_picker(prompt_bufnr)
+      end,
+    }
+  end)
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
@@ -363,25 +366,27 @@ function actions.exec(prompt_bufnr, ask_for_input)
     util.warn "Container is not running"
     return
   end
-  local binary = setup.get_option "binary" or "docker"
-  local exec = vim.fn.input {
-    prompt = binary .. " exec -it " .. container.ID .. " ",
-    default = "",
-    cancelreturn = "",
-  }
-  if type(exec) ~= "string" or exec:len() == 0 then
-    return
-  end
-  local args = {
-    "exec",
-    "-it",
-    container.ID,
-    unpack(vim.split(exec, " ")),
-  }
-  picker.docker_state:docker_command {
-    args = args,
-    ask_for_input = ask_for_input,
-  }
+
+  picker.docker_state:binary(function(binary)
+    local exec = vim.fn.input {
+      prompt = binary .. " exec -it " .. container.ID .. " ",
+      default = "",
+      cancelreturn = "",
+    }
+    if type(exec) ~= "string" or exec:len() == 0 then
+      return
+    end
+    local args = {
+      "exec",
+      "-it",
+      container.ID,
+      unpack(vim.split(exec, " ")),
+    }
+    picker.docker_state:docker_command {
+      args = args,
+      ask_for_input = ask_for_input,
+    }
+  end)
 end
 
 ---Asynchronously refresh the containers picker.
