@@ -3,6 +3,7 @@ local finder = require "telescope-docker.containers.finder"
 local previewer = require "telescope-docker.containers.previewer"
 local mappings = require "telescope-docker.containers.mappings"
 local State = require "telescope-docker.util.docker_state"
+local DockerPicker = require "telescope-docker.util.docker_picker"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
@@ -26,11 +27,6 @@ local available_containers_telescope_picker = function(options)
     options.env.DOCKER_HOST = options.host
   end
   local docker_state = State:new(options.env)
-  local _, err = docker_state:binary()
-  if err ~= nil then
-    util.error(err)
-    return
-  end
 
   docker_state:fetch_containers(function(containers_tbl)
     containers_tbl = containers_tbl or {}
@@ -64,6 +60,12 @@ local available_containers_telescope_picker = function(options)
   end)
 end
 
-return function(opts)
-  available_containers_telescope_picker(opts)
-end
+return DockerPicker:new {
+  picker_fn = available_containers_telescope_picker,
+  name = "containers",
+  description = "Existing docker containers",
+  condition = function()
+    local _, err = State:binary()
+    return err
+  end,
+}

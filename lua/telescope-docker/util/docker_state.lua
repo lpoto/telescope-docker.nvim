@@ -31,31 +31,32 @@ end
 ---@return any?: callback return values
 ---@return string?: Error
 function State:binary(callback)
-  if self.__cache.error then
-    return nil, self.__cache.error
+  if State.__cache.error then
+    return nil, State.__cache.error
   end
-  if self.__cache.binary and self.__cache.version then
+  if State.__cache.binary and State.__cache.version then
     if type(callback) ~= "function" then
       return nil, nil
     end
-    return callback(self.__cache.binary, self.__cache.version), nil
+    return callback(State.__cache.binary, State.__cache.version), nil
   end
   local b = setup.get_option "binary"
   if type(b) ~= "string" then
     b = "docker"
   end
   if vim.fn.executable(b) ~= 1 then
-    self.__cache.error = "Binary not executable: " .. b
-    return nil, self.__cache.error
+    State.__cache.error = "Binary not executable: " .. b
+    return nil, State.__cache.error
   end
   local version = self:__get_version(b)
   if type(version) ~= "string" then
-    self.__cache.error = "Failed to get version for binary: " .. vim.inspect(b)
-    return nil, self.__cache.error
+    State.__cache.error = "Failed to get version for docker binary: "
+      .. vim.inspect(b)
+    return nil, State.__cache.error
   end
 
-  self.__cache.binary = b
-  self.__cache.version = version
+  State.__cache.binary = b
+  State.__cache.version = version
 
   if type(callback) ~= "function" then
     return nil, nil
@@ -68,12 +69,12 @@ end
 ---@return string? Error
 ---@return string? Warning
 function State:compose_binary(callback)
-  if self.__cache.compose_error then
-    return nil, self.__cache.compose_error
+  if State.__cache.compose_error then
+    return nil, State.__cache.compose_error
   end
-  if self.__cache.compose_binary and self.__cache.compose_version then
+  if State.__cache.compose_binary and State.__cache.compose_version then
     if type(callback) ~= "function" then
-      return nil, nil, self.__cache.compose_warning
+      return nil, nil, State.__cache.compose_warning
     end
   end
   local _, err = self:binary(function(binary, _)
@@ -82,19 +83,19 @@ function State:compose_binary(callback)
       b = "docker-compose"
     end
     if vim.fn.executable(b) ~= 1 then
-      self.__cache.compose_error = "Compose binary not executable: " .. b
+      State.__cache.compose_error = "Compose binary not executable: " .. b
       return
     end
     local version, used_binary = self:__get_compose_version(b, binary)
     if type(version) ~= "string" then
-      self.__cache.compose_error = "Failed to get compose version for binary: "
+      State.__cache.compose_error = "Failed to get version for docker compose binary: "
         .. vim.inspect(b)
       return
     end
-    self.__cache.compose_binary = used_binary
-    self.__cache.compose_version = version
+    State.__cache.compose_binary = used_binary
+    State.__cache.compose_version = version
     if used_binary ~= b then
-      self.__cache.compose_warning = "Compose binary "
+      State.__cache.compose_warning = "Compose binary "
         .. vim.inspect(b)
         .. " is not valid, using "
         .. vim.inspect(used_binary)
@@ -103,28 +104,31 @@ function State:compose_binary(callback)
   if err ~= nil then
     return nil, err
   end
-  if self.__cache.compose_error then
-    return nil, self.__cache.compose_error, self.__cache.compose_warning
+  if State.__cache.compose_error then
+    return nil, State.__cache.compose_error, State.__cache.compose_warning
   end
   if type(callback) ~= "function" then
-    return nil, nil, self.__cache.compose_warning
+    return nil, nil, State.__cache.compose_warning
   end
-  return callback(self.__cache.compose_binary, self.__cache.compose_version),
+  return callback(State.__cache.compose_binary, State.__cache.compose_version),
     nil,
-    self.__cache.compose_warning
+    State.__cache.compose_warning
 end
 
 ---@return any?: callback return values
 ---@return string?: Error
 function State:machine_binary(callback)
-  if self.__cache.machine_error then
-    return nil, self.__cache.machine_error
+  if State.__cache.machine_error then
+    return nil, State.__cache.machine_error
   end
-  if self.__cache.machine_binary and self.__cache.machine_version then
+  if State.__cache.machine_binary and State.__cache.machine_version then
     if type(callback) ~= "function" then
       return nil, nil
     end
-    return callback(self.__cache.machine_binary, self.__cache.machine_version),
+    return callback(
+      State.__cache.machine_binary,
+      State.__cache.machine_version
+    ),
       nil
   end
   local b = setup.get_option "machine_binary"
@@ -132,18 +136,18 @@ function State:machine_binary(callback)
     b = "docker-machine"
   end
   if vim.fn.executable(b) ~= 1 then
-    self.__cache.machine_error = "Machine binary not executable: " .. b
-    return nil, self.__cache.machine_error
+    State.__cache.machine_error = "Machine binary not executable: " .. b
+    return nil, State.__cache.machine_error
   end
   local version = self:__get_machine_version(b)
   if type(version) ~= "string" then
-    self.__cache.machine_error = "Failed to get machine version for binary: "
+    State.__cache.machine_error = "Failed to get version for docker machine binary: "
       .. vim.inspect(b)
-    return nil, self.__cache.machine_error
+    return nil, State.__cache.machine_error
   end
 
-  self.__cache.machine_binary = b
-  self.__cache.machine_version = version
+  State.__cache.machine_binary = b
+  State.__cache.machine_version = version
 
   if type(callback) ~= "function" then
     return nil, nil

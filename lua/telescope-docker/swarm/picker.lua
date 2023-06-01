@@ -3,6 +3,7 @@ local finder = require "telescope-docker.swarm.finder"
 local previewer = require "telescope-docker.swarm.previewer"
 local mappings = require "telescope-docker.swarm.mappings"
 local State = require "telescope-docker.util.docker_state"
+local DockerPicker = require "telescope-docker.util.docker_picker"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
@@ -21,16 +22,6 @@ local available_nodes_telescope_picker = function(options)
     env.DOCKER_HOST = options.host
   end
   local docker_state = State:new(options.env)
-  local _, err = docker_state:binary()
-  if err ~= nil then
-    util.error(err)
-    return
-  end
-
-  if err ~= nil then
-    util.error(err)
-    return
-  end
 
   docker_state:fetch_nodes(function(swarm_tbl)
     swarm_tbl = swarm_tbl or {}
@@ -63,6 +54,12 @@ local available_nodes_telescope_picker = function(options)
   end)
 end
 
-return function(opts)
-  available_nodes_telescope_picker(opts)
-end
+return DockerPicker:new {
+  picker_fn = available_nodes_telescope_picker,
+  name = "nodes",
+  description = "Docker nodes in the current swarm",
+  condition = function()
+    local _, err = State:binary()
+    return err
+  end,
+}

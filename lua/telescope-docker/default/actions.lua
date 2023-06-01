@@ -7,10 +7,10 @@ function actions.select_picker(prompt_bufnr)
   telescope_utils.new_action(
     prompt_bufnr,
 
-    ---@param picker_f {name: string, picker: function}
+    ---@param docker_picker DockerPicker
     ---@param picker table
-    function(picker_f, picker)
-      setup.call_with_opts(picker_f.picker, picker.init_options or {})
+    function(docker_picker, picker)
+      docker_picker:run(picker.init_options or {})
     end,
     false
   )

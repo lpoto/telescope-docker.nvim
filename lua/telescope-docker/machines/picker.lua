@@ -3,6 +3,7 @@ local finder = require "telescope-docker.machines.finder"
 local previewer = require "telescope-docker.machines.previewer"
 local mappings = require "telescope-docker.machines.mappings"
 local State = require "telescope-docker.util.docker_state"
+local DockerPicker = require "telescope-docker.util.docker_picker"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
@@ -26,11 +27,6 @@ local available_machines_telescope_picker = function(options)
     options.env.DOCKER_HOST = options.host
   end
   local docker_state = State:new(options.env)
-  local _, err = docker_state:machine_binary()
-  if err ~= nil then
-    util.error(err)
-    return
-  end
 
   docker_state:fetch_machines(function(machines_tbl)
     machines_tbl = machines_tbl or {}
@@ -63,6 +59,12 @@ local available_machines_telescope_picker = function(options)
   end)
 end
 
-return function(opts)
-  available_machines_telescope_picker(opts)
-end
+return DockerPicker:new {
+  name = "machines",
+  description = "Existing docker machines",
+  picker_fn = available_machines_telescope_picker,
+  condition = function()
+    local _, err = State:machine_binary()
+    return err
+  end,
+}

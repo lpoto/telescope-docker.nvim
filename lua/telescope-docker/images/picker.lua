@@ -3,6 +3,7 @@ local finder = require "telescope-docker.images.finder"
 local previewer = require "telescope-docker.images.previewer"
 local mappings = require "telescope-docker.images.mappings"
 local State = require "telescope-docker.util.docker_state"
+local DockerPicker = require "telescope-docker.util.docker_picker"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
@@ -21,16 +22,6 @@ local available_images_telescope_picker = function(options)
     env.DOCKER_HOST = options.host
   end
   local docker_state = State:new(options.env)
-  local _, err = docker_state:binary()
-  if err ~= nil then
-    util.error(err)
-    return
-  end
-
-  if err ~= nil then
-    util.error(err)
-    return
-  end
 
   docker_state:fetch_images(function(images_tbl)
     images_tbl = images_tbl or {}
@@ -63,6 +54,12 @@ local available_images_telescope_picker = function(options)
   end)
 end
 
-return function(opts)
-  available_images_telescope_picker(opts)
-end
+return DockerPicker:new {
+  name = "images",
+  description = "Existing docker images",
+  picker_fn = available_images_telescope_picker,
+  condition = function()
+    local _, err = State:binary()
+    return err
+  end,
+}

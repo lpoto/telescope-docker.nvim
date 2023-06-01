@@ -3,6 +3,7 @@ local util = require "telescope-docker.util"
 local builtin = require "telescope.builtin"
 local action_state = require "telescope.actions.state"
 local State = require "telescope-docker.util.docker_state"
+local DockerPicker = require "telescope-docker.util.docker_picker"
 
 local get_result_processor
 local name = "Dockerfiles"
@@ -28,11 +29,6 @@ local dockerfiles_picker = function(options)
   end
 
   local docker_state = State:new(options.env)
-  local _, err = docker_state:binary()
-  if err ~= nil then
-    util.error(err)
-    return
-  end
 
   if options.attach_mappings == nil then
     options.attach_mappings = mappings.attach_mappings
@@ -123,6 +119,12 @@ function get_result_processor(picker, find_id, prompt, status_updater)
   end
 end
 
-return function(opts)
-  dockerfiles_picker(opts)
-end
+return DockerPicker:new {
+  name = "files",
+  description = "Dockerfiles in subdirectories",
+  picker_fn = dockerfiles_picker,
+  condition = function()
+    local _, err = State:binary()
+    return err
+  end,
+}
