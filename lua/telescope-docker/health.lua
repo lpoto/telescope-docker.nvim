@@ -39,7 +39,9 @@ function health.check()
 
   ok, err, warn = state:compose_binary(function(binary, version)
     vim.health.ok("Executable compose binary: " .. vim.inspect(binary))
-    vim.health.ok("Compose version: " .. vim.inspect(version))
+    if version ~= nil then
+      vim.health.ok("Compose version: " .. vim.inspect(version))
+    end
     return true
   end)
   if not ok and type(err) == "string" then
@@ -51,17 +53,33 @@ function health.check()
     vim.health.warn(warn)
   end
 
+  ok, err, warn = state:buildx_binary(function(binary, version)
+    vim.health.ok("Executable buildx binary: " .. vim.inspect(binary))
+    if version ~= nil then
+      vim.health.ok("Buildx version: " .. vim.inspect(version))
+    end
+    return true
+  end)
+  if not ok and type(err) == "string" then
+    vim.health.warn(err, {
+      "Change the buildx binary",
+    })
+  elseif type(warn) == "string" then
+    vim.health.warn(warn)
+  end
+
   ok, err, warn = state:machine_binary(function(binary, version)
     vim.health.ok("Executable machine binary: " .. vim.inspect(binary))
-    vim.health.ok("Machine version: " .. vim.inspect(version))
+    if version ~= nil then
+      vim.health.ok("Machine version: " .. vim.inspect(version))
+    end
     return true
   end)
   if not ok and type(err) == "string" then
     vim.health.warn(err, {
       "Change the machine binary",
     })
-  end
-  if type(warn) == "string" then
+  elseif type(warn) == "string" then
     vim.health.warn(warn)
   end
 end

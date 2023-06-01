@@ -7,13 +7,9 @@ local Node = require "telescope-docker.swarm.node"
 local Image = require "telescope-docker.images.image"
 local telescope_actions = require "telescope.actions"
 
-local job_id
-
 ---@class State
----@field env table?: Environment variables
+---@field env table
 local State = {
-  locked = false,
-  env = nil,
   __cache = {},
 }
 State.__index = State
@@ -23,7 +19,7 @@ State.__index = State
 function State:new(env)
   local o = setmetatable({}, State)
   if type(env) == "table" and next(env) then
-    o.env = env
+    o.env = vim.tbl_extend("force", o.env or {}, env)
   end
   return o
 end
@@ -43,10 +39,6 @@ function State:binary(callback)
   local b = setup.get_option "binary"
   if type(b) ~= "string" then
     b = "docker"
-  end
-  if vim.fn.executable(b) ~= 1 then
-    State.__cache.error = "Binary not executable: " .. b
-    return nil, State.__cache.error
   end
   local version = self:__get_version(b)
   if type(version) ~= "string" then
@@ -69,90 +61,126 @@ end
 ---@return string? Error
 ---@return string? Warning
 function State:compose_binary(callback)
-  if State.__cache.compose_error then
-    return nil, State.__cache.compose_error
+  local b, v, e, w = self:plugin_binary(
+    "compose",
+    "docker-compose",
+    "compose",
+    false,
+    "--version",
+    "Install 'docker-compose' to manage docker compose files"
+  )
+  local r = nil
+  if b ~= nil and type(callback) == "function" then
+    r = callback(b, v)
   end
-  if State.__cache.compose_binary and State.__cache.compose_version then
-    if type(callback) ~= "function" then
-      return nil, nil, State.__cache.compose_warning
-    end
+  return r, e, w
+end
+
+function State:buildx_binary(callback)
+  local b, v, err, warn = self:plugin_binary(
+    "buildx",
+    "docker-buildx",
+    "buildx",
+    true,
+    "version",
+    "Install 'buildx' to build images with buildkit"
+  )
+  if type(b) == "string" and type(callback) == "function" then
+    return callback(b, v), err, warn
   end
-  local _, err = self:binary(function(binary, _)
-    local b = setup.get_option "compose_binary"
-    if type(b) ~= "string" then
-      b = "docker-compose"
-    end
-    if vim.fn.executable(b) ~= 1 then
-      State.__cache.compose_error = "Compose binary not executable: " .. b
-      return
-    end
-    local version, used_binary = self:__get_compose_version(b, binary)
-    if type(version) ~= "string" then
-      State.__cache.compose_error = "Failed to get version for docker compose binary: "
-        .. vim.inspect(b)
-      return
-    end
-    State.__cache.compose_binary = used_binary
-    State.__cache.compose_version = version
-    if used_binary ~= b then
-      State.__cache.compose_warning = "Compose binary "
-        .. vim.inspect(b)
-        .. " is not valid, using "
-        .. vim.inspect(used_binary)
-    end
-  end)
-  if err ~= nil then
-    return nil, err
-  end
-  if State.__cache.compose_error then
-    return nil, State.__cache.compose_error, State.__cache.compose_warning
-  end
-  if type(callback) ~= "function" then
-    return nil, nil, State.__cache.compose_warning
-  end
-  return callback(State.__cache.compose_binary, State.__cache.compose_version),
-    nil,
-    State.__cache.compose_warning
+  return nil, err, warn
 end
 
 ---@return any?: callback return values
 ---@return string?: Error
+---@return string?: Warning
 function State:machine_binary(callback)
-  if State.__cache.machine_error then
-    return nil, State.__cache.machine_error
+  local b, v, e, w = self:plugin_binary(
+    "machine",
+    "docker-machine",
+    "machine",
+    false,
+    "--version",
+    "Install 'docker-machine' to manage docker machines"
+  )
+  local r = nil
+  if b ~= nil and type(callback) == "function" then
+    r = callback(b, v)
   end
-  if State.__cache.machine_binary and State.__cache.machine_version then
-    if type(callback) ~= "function" then
-      return nil, nil
+  return r, e, w
+end
+
+function State:plugin_binary(
+  name,
+  default_binary,
+  fall_back,
+  builtin_fallback,
+  version_string,
+  default_warn
+)
+  local err = State.__cache[name .. "_error"]
+  local warn = State.__cache[name .. "_warning"]
+  if err then
+    return nil, nil, err, warn
+  end
+  local bin = State.__cache[name .. "_binary"]
+  local version = State.__cache[name .. "_version"]
+  if type(bin) == "string" then
+    return bin, version, nil, warn
+  end
+  local default_bin_used = true
+  local binary = setup.get_option(name .. "_binary")
+  if type(binary) ~= "string" then
+    binary = default_binary
+    default_bin_used = false
+  end
+  version = self:__get_plugin_version(name, binary, version_string)
+  if type(version) == "string" then
+    State.__cache[name .. "_binary"] = binary
+    State.__cache[name .. "_version"] = version
+    return binary, version, nil, warn
+  end
+  _, err = self:binary(function(b)
+    if type(fall_back) == "string" then
+      bin = b .. " " .. fall_back
+      version = self:__get_plugin_version(name, bin, version_string)
+      if type(version) == "string" then
+        State.__cache[name .. "_binary"] = bin
+        State.__cache[name .. "_version"] = version
+        if default_bin_used then
+          warn = "Failed to get version for '"
+            .. binary
+            .. "', falling back to '"
+            .. bin
+            .. "'"
+          State.__cache[name .. "_warning"] = warn
+        end
+        return
+      elseif type(default_warn) == "string" then
+        warn = default_warn
+        State.__cache[name .. "_warning"] = warn
+      end
     end
-    return callback(
-      State.__cache.machine_binary,
-      State.__cache.machine_version
-    ),
-      nil
+    if builtin_fallback then
+      bin = b
+      State.__cache[name .. "_binary"] = bin
+      return
+    else
+      State.__cache[name .. "_error"] = "Failed to get version for '"
+        .. bin
+        .. "'"
+    end
+  end)
+  if err == nil then
+    err = State.__cache[name .. "_error"]
   end
-  local b = setup.get_option "machine_binary"
-  if type(b) ~= "string" then
-    b = "docker-machine"
+  if err ~= nil then
+    State.__cache[name .. "_error"] = err
+    return nil, nil, err, warn
   end
-  if vim.fn.executable(b) ~= 1 then
-    State.__cache.machine_error = "Machine binary not executable: " .. b
-    return nil, State.__cache.machine_error
-  end
-  local version = self:__get_machine_version(b)
-  if type(version) ~= "string" then
-    State.__cache.machine_error = "Failed to get version for docker machine binary: "
-      .. vim.inspect(b)
-    return nil, State.__cache.machine_error
-  end
-
-  State.__cache.machine_binary = b
-  State.__cache.machine_version = version
-
-  if type(callback) ~= "function" then
-    return nil, nil
-  end
-  return callback(b, version), nil
+  binary = State.__cache[name .. "_binary"]
+  version = State.__cache[name .. "_version"]
+  return binary, version, err, warn
 end
 
 ---@param env table?
@@ -179,12 +207,16 @@ end
 ---@field args string[]: Docker command arguments
 ---@field ask_for_input boolean: Whether to ask for input
 ---@field cwd string?: Current working directory
+---@field binary string?
 
 ---Execute a docker command with the provided arguments in
 ---a new terminal window.
 ---
 ---@param opts DockerCommandOpts
 function State:docker_command(opts)
+  if type(opts.binary) == "string" then
+    return self:__docker_command(opts.binary, opts)
+  end
   return self:binary(function(binary, _)
     return self:__docker_command(binary, opts)
   end)
@@ -195,6 +227,9 @@ end
 ---
 ---@param opts DockerCommandOpts
 function State:docker_machine_command(opts)
+  if type(opts.binary) == "string" then
+    return self:__docker_command(opts.binary, opts)
+  end
   return self:machine_binary(function(binary, _)
     return self:__docker_command(binary, opts)
   end)
@@ -204,10 +239,6 @@ function State:__docker_command(binary, opts)
   opts = opts or {}
   if type(opts.args) ~= "table" or not next(opts.args) then
     util.warn("Invalid arguments: " .. vim.inspect(opts.args))
-    return
-  end
-  if self.locked then
-    util.warn "Docker state is locked, please wait a moment"
     return
   end
   if opts.ask_for_input then
@@ -226,7 +257,6 @@ function State:__docker_command(binary, opts)
     end
   end
 
-  self.locked = true
   local ok, e = pcall(function()
     if
       vim.api.nvim_buf_get_option(0, "filetype")
@@ -239,7 +269,8 @@ function State:__docker_command(binary, opts)
     local cmd = { binary, unpack(opts.args) }
     local o = { detach = false }
     local env = self:get_env()
-    if env then
+    env = vim.tbl_extend("force", env or {}, opts.env or {})
+    if type(env) == "table" and next(env) then
       o.env = env
     end
     if type(opts.cwd) == "string" then
@@ -251,16 +282,20 @@ function State:__docker_command(binary, opts)
   if not ok then
     util.warn("Failed to execute docker command:", e)
   end
-  self.locked = false
 end
 
 ---@class DockerJobOpts
----@field item Container|Image
+---@field item table
 ---@field args table
----@field callback function
----@field start_msg string
----@field end_msg string
----@field ask_for_input boolean
+---@field callback function?
+---@field err_callback function?
+---@field start_msg string?
+---@field end_msg string?
+---@field ask_for_input boolean?
+---@field cwd string?
+---@field env table?
+---@field await boolean?
+---@field silent boolean?
 
 ---Execute an async docker command with the provided arguments.
 ---
@@ -286,10 +321,6 @@ function State:__docker_job(binary, opts)
     util.warn("Invalid docker arguments: " .. vim.inspect(opts.args))
     return
   end
-  if self.locked then
-    util.warn "Docker state is locked, please wait a moment"
-    return
-  end
 
   if opts.ask_for_input then
     local input = vim.fn.input {
@@ -307,8 +338,7 @@ function State:__docker_job(binary, opts)
     end
   end
 
-  self.locked = true
-  local ok, e = pcall(function()
+  local ok, jid = pcall(function()
     if type(opts.start_msg) == "string" then
       util.info(opts.start_msg)
     end
@@ -327,12 +357,16 @@ function State:__docker_job(binary, opts)
         end
       end,
       on_exit = function(_, code)
-        self.locked = false
         if code ~= 0 then
-          if #error > 0 then
-            util.warn(table.concat(error, "\n"))
-          else
-            util.warn("Docker job - exited with code: " .. vim.inspect(code))
+          if not opts.silent then
+            if #error > 0 then
+              util.warn(table.concat(error, "\n"))
+            else
+              util.warn("Docker job - exited with code: " .. vim.inspect(code))
+            end
+          end
+          if type(opts.err_callback) == "function" then
+            opts.err_callback(code, error)
           end
           return
         end
@@ -345,15 +379,23 @@ function State:__docker_job(binary, opts)
       end,
     }
     local env = self:get_env()
-    if env then
+    env = vim.tbl_extend("force", env or {}, opts.env or {})
+    if type(env) == "table" and next(env) then
       o.env = env
     end
-    vim.fn.jobstart(cmd, o)
+    if type(opts.cwd) == "string" then
+      o.cwd = opts.cwd
+    end
+    return vim.fn.jobstart(cmd, o)
   end)
   if not ok then
-    util.warn(e)
-    self.locked = false
+    util.warn(jid)
+    return
   end
+  if opts.await and type(jid) == "number" then
+    vim.fn.jobwait({ jid }, 10000)
+  end
+  return jid
 end
 
 ---@param callback function?
@@ -467,23 +509,6 @@ function State:fetch_machines(callback)
   return machines or {}
 end
 
-function State:__get_compose_version(compose_binary, binary)
-  local b = compose_binary
-  local v = self:__version { b, "--version" }
-  if type(v) ~= "string" or string.find(v:lower(), "compose") == nil then
-    v = self:__version { binary, "compose", "version" }
-    if v then
-      b = binary .. " compose"
-    end
-  end
-  if type(v) == "string" then
-    if string.find(v:lower(), "compose") == nil then
-      return nil
-    end
-  end
-  return v, b
-end
-
 function State:__get_version(binary)
   local v = self:__version { binary, "--version" }
   if type(v) == "string" then
@@ -494,10 +519,10 @@ function State:__get_version(binary)
   return v
 end
 
-function State:__get_machine_version(binary)
-  local v = self:__version { binary, "--version" }
+function State:__get_plugin_version(name, binary, version_string)
+  local v = self:__version(binary .. " " .. version_string)
   if type(v) == "string" then
-    if string.find(v:lower(), "machine") == nil then
+    if string.find(v:lower(), name) == nil then
       return nil
     end
   end
@@ -507,6 +532,9 @@ end
 function State:__version(cmd)
   local ok, v = pcall(function()
     local version = nil
+    if type(cmd) == "table" then
+      cmd = table.concat(cmd, " ")
+    end
     local j
     j = vim.fn.jobstart(cmd, {
       detach = false,
@@ -535,11 +563,6 @@ function State:__fetch_docker_items(cmd, process_json, callback, do_preprocess)
   if do_preprocess == nil then
     do_preprocess = true
   end
-  if self.locked then
-    util.warn "Docker state is locked, please wait a moment"
-    return {}
-  end
-  self.locked = true
   local ok, all_items = pcall(function()
     local items = {}
     local secondary_items = {}
@@ -582,7 +605,6 @@ function State:__fetch_docker_items(cmd, process_json, callback, do_preprocess)
           )
         end
 
-        self.locked = false
         local i = {}
         for _, item in ipairs(items) do
           table.insert(i, item)
@@ -599,10 +621,7 @@ function State:__fetch_docker_items(cmd, process_json, callback, do_preprocess)
     if env then
       opts.env = env
     end
-    if job_id then
-      pcall(vim.fn.jobstop, job_id)
-    end
-    job_id = vim.fn.jobstart(cmd, opts)
+    local job_id = vim.fn.jobstart(cmd, opts)
     if not callback then
       vim.fn.jobwait({ job_id }, 2000)
     end
@@ -617,7 +636,6 @@ function State:__fetch_docker_items(cmd, process_json, callback, do_preprocess)
   end)
   if not ok then
     util.warn(all_items)
-    self.locked = false
     return {}
   end
   return all_items

@@ -63,6 +63,21 @@ function setup.setup(o)
     end
   end
 
+  if o.buildx_binary ~= nil and type(o.buildx_binary) ~= "string" then
+    local msg = "'buildx_binary' should be string"
+    table.insert(errors, msg)
+    util.warn(msg)
+    o.buildx_binary = nil
+  elseif o.buildx_binary ~= nil then
+    if vim.fn.executable(o.buildx_binary) == 0 then
+      local msg = "Buildx binary is not executable: "
+        .. vim.inspect(o.buildx_binary)
+      table.insert(errors, msg)
+      util.warn(msg)
+      o.buildx_binary = nil
+    end
+  end
+
   if o.machine_binary ~= nil and type(o.machine_binary) ~= "string" then
     local msg = "'machine_binary' should be string"
     table.insert(errors, msg)
