@@ -36,7 +36,31 @@ function setup.setup(o)
     util.set_log_level(o.log_level)
   end
   if o.binary ~= nil and type(o.binary) ~= "string" then
+    local msg = "'binary' should be string"
+    table.insert(errors, msg)
+    util.warn(msg)
     o.binary = nil
+  elseif o.binary ~= nil then
+    if vim.fn.executable(o.binary) == 0 then
+      local msg = "Docker binary must be executable"
+      table.insert(errors, msg)
+      util.warn(msg)
+      o.binary = nil
+    end
+  end
+
+  if o.compose_binary ~= nil and type(o.compose_binary) ~= "string" then
+    local msg = "'compose_binary' should be string"
+    table.insert(errors, msg)
+    util.warn(msg)
+    o.compose_binary = nil
+  elseif o.compose_binary ~= nil then
+    if vim.fn.executable(o.compose_binary) == 0 then
+      local msg = "Compose binary must be executable"
+      table.insert(errors, msg)
+      util.warn(msg)
+      o.compose_binary = nil
+    end
   end
 
   if type(o.theme) == "string" then

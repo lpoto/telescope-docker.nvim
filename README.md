@@ -30,7 +30,8 @@ require("telescope").setup {
     -- NOTE: this setup is optional
     docker = {
       theme = "ivy",
-      binary = "docker", -- in case you want  to use podman or something
+      binary = "docker", -- in case you want to use podman or something
+      compose_binary = "docker-compose",
       log_level = vim.log.levels.INFO,
       init_term = "tabnew", -- "vsplit new", "split new", ...
       -- NOTE: init_term may also be a function that receives
