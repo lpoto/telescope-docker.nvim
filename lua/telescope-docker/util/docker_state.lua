@@ -2,6 +2,7 @@ local util = require "telescope-docker.util"
 local enum = require "telescope-docker.enum"
 local setup = require "telescope-docker.setup"
 local Container = require "telescope-docker.containers.container"
+local Machine = require "telescope-docker.machines.machine"
 local Image = require "telescope-docker.images.image"
 local telescope_actions = require "telescope.actions"
 
@@ -371,6 +372,45 @@ function State:fetch_images(callback)
   return images or {}
 end
 
+function State:fetch_machines(callback)
+  local total_json = ""
+  local process_json = function(json)
+    json = json:gsub("^.*{", "{")
+    json = json:gsub("}.*$", "}")
+    total_json = total_json .. json
+    if total_json:sub(1, 1) ~= "{" or total_json:sub(-1) ~= "}" then
+      return
+    end
+    local machine = Machine:new(total_json)
+    local env = self:get_env()
+    machine.env = env
+    total_json = ""
+    return machine, nil
+  end
+
+  local machines, _ = self:machine_binary(function(binary, _)
+    local cmd = {
+      binary,
+      "ls",
+      [[--format='{]]
+        .. [["Name":"{{.Name}}",]]
+        .. [["DriverName": "{{.DriverName}}",]]
+        .. [["Active":"{{.Active}}",]]
+        .. [["ActiveHost":{{.ActiveHost}},]]
+        .. [["ActiveSwarm":{{.ActiveSwarm}},]]
+        .. [["State":"{{.State}}",]]
+        .. [["URL":"{{.URL}}",]]
+        .. [["Swarm":"{{.Swarm}}",]]
+        .. [["Error":"{{.Error}}",]]
+        .. [["DockerVersion":"{{.DockerVersion}}",]]
+        .. [["ResponseTime":"{{.ResponseTime}}"]]
+        .. [[}']],
+    }
+    return self:__fetch_docker_items(cmd, process_json, callback, false)
+  end)
+  return machines or {}
+end
+
 function State:__get_compose_version(compose_binary, binary)
   local b = compose_binary
   local v = self:__version { b, "--version" }
@@ -435,7 +475,10 @@ function State:__version(cmd)
   return v
 end
 
-function State:__fetch_docker_items(cmd, process_json, callback)
+function State:__fetch_docker_items(cmd, process_json, callback, do_preprocess)
+  if do_preprocess == nil then
+    do_preprocess = true
+  end
   if self.locked then
     util.warn "Docker state is locked, please wait a moment"
     return {}
@@ -456,7 +499,9 @@ function State:__fetch_docker_items(cmd, process_json, callback)
         end
         for _, json in ipairs(data) do
           local ok, e = pcall(function()
-            json = util.preprocess_json(json)
+            if do_preprocess then
+              json = util.preprocess_json(json)
+            end
             if type(json) == "string" and json:len() > 0 then
               local item, secondary_item = process_json(json)
               if item ~= nil then
