@@ -1,5 +1,4 @@
 local mappings = require "telescope-docker.files.mappings"
-local util = require "telescope-docker.util"
 local builtin = require "telescope.builtin"
 local action_state = require "telescope.actions.state"
 local State = require "telescope-docker.util.docker_state"
@@ -124,7 +123,7 @@ return DockerPicker:new {
   description = "Dockerfiles in subdirectories",
   picker_fn = dockerfiles_picker,
   condition = function()
-    local _, err = State:binary()
-    return err
+    local _, err, warn = State:buildx_binary()
+    return err, warn
   end,
 }

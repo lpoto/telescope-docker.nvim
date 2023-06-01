@@ -1,6 +1,7 @@
 local action_state = require "telescope.actions.state"
 local telescope_actions = require "telescope.actions"
 local Path = require "plenary.path"
+local util = require "telescope-docker.util"
 
 local actions = {}
 
@@ -42,8 +43,18 @@ function actions.__build(prompt_bufnr, ask_for_input, cd, tag)
     cwd = vim.fn.input {
       prompt = "Working directory: ",
       default = vim.fs.dirname(dockerfile),
-      cancelreturn = nil,
+      cancelreturn = false,
     }
+    if cwd == false then
+      cwd = nil
+    elseif type(cwd) == "string" and cwd:len() > 0 then
+      cwd = cwd:gsub("^%s*(.-)%s*$", "%1")
+      if vim.fn.isdirectory(cwd) ~= 1 then
+        util.warn(cwd .. " is not a valid directory")
+        cwd = nil
+        return
+      end
+    end
   end
   local args = { "build", "-f", dockerfile }
   if tag then
@@ -59,11 +70,14 @@ function actions.__build(prompt_bufnr, ask_for_input, cd, tag)
     table.insert(args, tag_input)
   end
   table.insert(args, ".")
-  picker.docker_state:docker_command {
-    args = args,
-    cwd = cwd,
-    ask_for_input = ask_for_input,
-  }
+  return picker.docker_state:buildx_binary(function(binary)
+    picker.docker_state:docker_command {
+      binary = binary,
+      args = args,
+      cwd = cwd,
+      ask_for_input = ask_for_input,
+    }
+  end)
 end
 
 return actions
