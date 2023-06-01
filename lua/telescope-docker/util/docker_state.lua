@@ -3,6 +3,7 @@ local enum = require "telescope-docker.enum"
 local setup = require "telescope-docker.setup"
 local Container = require "telescope-docker.containers.container"
 local Machine = require "telescope-docker.machines.machine"
+local Node = require "telescope-docker.swarm.node"
 local Image = require "telescope-docker.images.image"
 local telescope_actions = require "telescope.actions"
 
@@ -399,6 +400,30 @@ function State:fetch_images(callback)
   return images or {}
 end
 
+---@param callback function?
+---@return Node[]
+function State:fetch_nodes(callback)
+  local proccess_json = function(json)
+    local node = Node:new(json)
+    local env = self:get_env()
+    node.env = env
+    return node
+  end
+
+  local nodes, _ = self:binary(function(binary, _)
+    local cmd = {
+      binary,
+      "node",
+      "ls",
+      "--format='{{json . }}'",
+    }
+    return self:__fetch_docker_items(cmd, proccess_json, callback)
+  end)
+  return nodes or {}
+end
+
+---@param callback function?
+---@return Machine[]
 function State:fetch_machines(callback)
   local total_json = ""
   local process_json = function(json)
