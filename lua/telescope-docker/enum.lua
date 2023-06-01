@@ -26,6 +26,15 @@ enum.IMAGES = {
   PUSH = "push",
 }
 
+enum.NODES = {
+  INSPECT = "inspect",
+  PROMOTE = "promote",
+  DEMOTE = "demote",
+  UPDATE = "update",
+  LIST_TASKS = "list tasks",
+  REMOVE = "remove",
+}
+
 enum.MACHINES = {
   INSPECT = "inspect",
   KILL = "kill",

@@ -2,6 +2,7 @@ local util = require "telescope-docker.util"
 local setup = require "telescope-docker.setup"
 local containers_picker = require "telescope-docker.containers.picker"
 local images_picker = require "telescope-docker.images.picker"
+local nodes_picker = require "telescope-docker.swarm.picker"
 local machines_picker = require "telescope-docker.machines.picker"
 local compose_picker = require "telescope-docker.compose.picker"
 local dockerfiles_picker = require "telescope-docker.files.picker"
@@ -30,6 +31,16 @@ local function images(opts)
   setup.call_with_opts(images_picker, opts or {})
 end
 
+---Opens the swarm picker and merges the provided opts
+---with the default options provided during the setup.
+---@param opts table|nil
+local function swarm(opts)
+  setup.call_with_opts(nodes_picker, opts or {})
+end
+
+---Opens the machines picker and merges the provided opts
+---with the default options provided during the setup.
+---@param opts table|nil
 local function machines(opts)
   setup.call_with_opts(machines_picker, opts or {})
 end
@@ -56,5 +67,7 @@ return telescope.register_extension {
     compose = compose,
     files = files,
     machines = machines,
+    swarm = swarm,
+    nodes = swarm,
   },
 }
