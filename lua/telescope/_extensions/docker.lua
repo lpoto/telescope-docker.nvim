@@ -1,11 +1,14 @@
 local util = require "telescope-docker.util"
 local setup = require "telescope-docker.setup"
-local containers_picker = require "telescope-docker.containers.picker"
-local images_picker = require "telescope-docker.images.picker"
-local nodes_picker = require "telescope-docker.swarm.picker"
-local machines_picker = require "telescope-docker.machines.picker"
-local compose_picker = require "telescope-docker.compose.picker"
-local dockerfiles_picker = require "telescope-docker.files.picker"
+local pickers = {
+  containers = require "telescope-docker.containers.picker",
+  images = require "telescope-docker.images.picker",
+  swarm = require "telescope-docker.swarm.picker",
+  machines = require "telescope-docker.machines.picker",
+  compose = require "telescope-docker.compose.picker",
+  files = require "telescope-docker.files.picker",
+}
+pickers.docker = require "telescope-docker.default.picker"(pickers)
 
 -- NOTE: ensure the telescope is loaded
 -- before registering the extension
@@ -17,57 +20,11 @@ if not has_telescope then
   )
 end
 
----Opens the containers picker and merges the provided opts
----with the default options provided during the setup.
----@param opts table|nil
-local function containers(opts)
-  setup.call_with_opts(containers_picker, opts or {})
-end
-
----Opens the images picker and merges the provided opts
----with the default options provided during the setup.
----@param opts table|nil
-local function images(opts)
-  setup.call_with_opts(images_picker, opts or {})
-end
-
----Opens the swarm picker and merges the provided opts
----with the default options provided during the setup.
----@param opts table|nil
-local function swarm(opts)
-  setup.call_with_opts(nodes_picker, opts or {})
-end
-
----Opens the machines picker and merges the provided opts
----with the default options provided during the setup.
----@param opts table|nil
-local function machines(opts)
-  setup.call_with_opts(machines_picker, opts or {})
-end
-
----Opens the docker-compose picker and merges the provided opts
----with the default options provided during the setup.
----@param opts table|nil
-local function compose(opts)
-  setup.call_with_opts(compose_picker, opts or {})
-end
-
----Opens the dockerfiles picker and merges the provided opts
----with the default options provided during the setup.
----@param opts table|nil
-local function files(opts)
-  setup.call_with_opts(dockerfiles_picker, opts or {})
-end
-
 return telescope.register_extension {
   setup = setup.setup,
-  exports = {
-    containers = containers,
-    images = images,
-    compose = compose,
-    files = files,
-    machines = machines,
-    swarm = swarm,
-    nodes = swarm,
-  },
+  exports = vim.tbl_map(function(fn)
+    return function(opts)
+      return setup.call_with_opts(fn, opts or {})
+    end
+  end, pickers),
 }
