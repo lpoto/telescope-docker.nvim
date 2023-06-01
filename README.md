@@ -1,7 +1,7 @@
 # Telescope docker
 
 `telescope-docker.nvim` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) extension,
-that allows managing containers, images, machines, dockerfiles and docker-compose files from a telescope prompt.
+that allows managing containers, images, machines, swarm nodes, dockerfiles and docker-compose files from a telescope prompt.
 
 https://user-images.githubusercontent.com/67372390/236677032-32ebe222-c0f1-480c-a6b6-758ac84d0475.mp4
 
@@ -121,4 +121,4 @@ vim.g.docker_env = {
 - [x] Dockerfiles
 - [x] docker-compose files
 - [x] docker machines
-- [ ] docker swarm
+- [x] docker swarm
