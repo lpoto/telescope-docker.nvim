@@ -26,7 +26,7 @@ local available_machines_telescope_picker = function(options)
     options.env.DOCKER_HOST = options.host
   end
   local docker_state = State:new(options.env)
-  local _, err = docker_state:binary()
+  local _, err = docker_state:machine_binary()
   if err ~= nil then
     util.error(err)
     return
