@@ -50,20 +50,4 @@ Container.fields = {
   { name = "Labels", key_hl = "Conditional", value_hl = "String" },
 }
 
----@return string[]
-function Container:represent()
-  local lines = {}
-  for _, field in pairs(self.fields) do
-    table.insert(lines, string.format("%s: %s", field.name, self[field.name]))
-  end
-
-  if self.env then
-    table.insert(lines, "")
-    for k, v in pairs(self.env) do
-      table.insert(lines, "# " .. k .. ": " .. v)
-    end
-  end
-  return lines
-end
-
 return Container

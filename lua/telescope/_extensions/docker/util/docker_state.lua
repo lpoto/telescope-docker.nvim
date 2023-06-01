@@ -278,82 +278,21 @@ end
 ---@param callback function?
 ---@return Container[]
 function State:fetch_containers(callback)
+  local proccess_json = function(json)
+    local container = Container:new(json)
+    local env = self:get_env()
+    container.env = env
+    return container
+  end
+
   local containers, _ = self:binary(function(binary, _)
-    if self.locked then
-      util.warn "Docker state is locked, please wait a moment"
-      return {}
-    end
-    self.locked = true
-    local ok, containers = pcall(function()
-      local cmd = {
-        binary,
-        "ps",
-        "-a",
-        "--format='{{json . }}'",
-      }
-
-      local err = nil
-      local err_count = 0
-
-      local containers = {}
-
-      local opts = {
-        detach = false,
-        on_stdout = function(_, data)
-          if type(data) ~= "table" then
-            return
-          end
-          for _, json in ipairs(data) do
-            local ok, e = pcall(function()
-              json = util.preprocess_json(json)
-              if json ~= nil then
-                local container = Container:new(json)
-                local env = self:get_env()
-                container.env = env
-                table.insert(containers, container)
-              end
-            end)
-            if not ok then
-              err = e
-              err_count = err_count + 1
-            end
-          end
-        end,
-        on_exit = function()
-          if err_count > 0 then
-            util.warn(
-              err_count,
-              "error(s) occurred while fetching containers:",
-              err
-            )
-          end
-
-          self.locked = false
-
-          if callback then
-            callback(containers)
-          end
-        end,
-      }
-      local env = self:get_env()
-      if env then
-        opts.env = env
-      end
-      if job_id then
-        pcall(vim.fn.jobstop, job_id)
-      end
-      job_id = vim.fn.jobstart(cmd, opts)
-      if not callback then
-        vim.fn.jobwait({ job_id }, 2000)
-      end
-      return containers
-    end)
-    if not ok then
-      util.warn(containers)
-      self.locked = false
-      return {}
-    end
-    return containers
+    local cmd = {
+      binary,
+      "ps",
+      "-a",
+      "--format='{{json . }}'",
+    }
+    return self:__fetch_docker_items(cmd, proccess_json, callback)
   end)
   return containers or {}
 end
@@ -361,100 +300,25 @@ end
 ---@param callback function?
 ---@return Image[]
 function State:fetch_images(callback)
+  local process_json = function(json)
+    local image = Image:new(json)
+    local env = self:get_env()
+    image.env = env
+    if image:name() == "<none>:<none>" then
+      return nil, image
+    end
+    return image
+  end
+
   local images, _ = self:binary(function(binary, _)
-    if self.locked then
-      util.warn "Docker state is locked, please wait a moment"
-      return {}
-    end
-    self.locked = true
-    local ok, images = pcall(function()
-      local cmd = {
-        binary,
-        "image",
-        "ls",
-        "-a",
-        "--format='{{json . }}'",
-      }
-      local images = {}
-      local unnamed_images = {}
-
-      local err = nil
-      local err_count = 0
-
-      local opts = {
-        detach = false,
-        on_stdout = function(_, data)
-          if type(data) ~= "table" then
-            return
-          end
-          for _, json in ipairs(data) do
-            local ok, e = pcall(function()
-              json = util.preprocess_json(json)
-              if json ~= nil then
-                local image = Image:new(json)
-                local env = self:get_env()
-                image.env = env
-                if image:name() == "<none>:<none>" then
-                  table.insert(unnamed_images, image)
-                else
-                  table.insert(images, image)
-                end
-              end
-            end)
-            if not ok then
-              err = e
-              err_count = err_count + 1
-            end
-          end
-        end,
-        on_exit = function()
-          if err_count > 0 then
-            util.warn(
-              err_count,
-              "error(s) occurred while fetching images:",
-              err
-            )
-          end
-
-          self.locked = false
-          local im = {}
-          for _, image in ipairs(images) do
-            table.insert(im, image)
-          end
-          for _, image in ipairs(unnamed_images) do
-            table.insert(im, image)
-          end
-          if callback then
-            callback(im)
-          end
-        end,
-      }
-      local env = self:get_env()
-      if env then
-        opts.env = env
-      end
-      if job_id then
-        pcall(vim.fn.jobstop, job_id)
-      end
-      job_id = vim.fn.jobstart(cmd, opts)
-      if not callback then
-        vim.fn.jobwait({ job_id }, 2000)
-      end
-      local im = {}
-      for _, image in ipairs(images) do
-        table.insert(im, image)
-      end
-      for _, image in ipairs(unnamed_images) do
-        table.insert(im, image)
-      end
-      return im
-    end)
-    if not ok then
-      util.warn(images)
-      self.locked = false
-      return {}
-    end
-    return images
+    local cmd = {
+      binary,
+      "image",
+      "ls",
+      "-a",
+      "--format='{{json . }}'",
+    }
+    return self:__fetch_docker_items(cmd, process_json, callback)
   end)
   return images or {}
 end
@@ -511,6 +375,93 @@ function State:__version(cmd)
     return nil
   end
   return v
+end
+
+function State:__fetch_docker_items(cmd, process_json, callback)
+  if self.locked then
+    util.warn "Docker state is locked, please wait a moment"
+    return {}
+  end
+  self.locked = true
+  local ok, all_items = pcall(function()
+    local items = {}
+    local secondary_items = {}
+
+    local err = nil
+    local err_count = 0
+
+    local opts = {
+      detach = false,
+      on_stdout = function(_, data)
+        if type(data) ~= "table" then
+          return
+        end
+        for _, json in ipairs(data) do
+          local ok, e = pcall(function()
+            json = util.preprocess_json(json)
+            if type(json) == "string" and json:len() > 0 then
+              local item, secondary_item = process_json(json)
+              if item ~= nil then
+                table.insert(items, item)
+              elseif secondary_item ~= nil then
+                table.insert(secondary_items, secondary_item)
+              end
+            end
+          end)
+          if not ok then
+            err = e
+            err_count = err_count + 1
+          end
+        end
+      end,
+      on_exit = function()
+        if err_count > 0 then
+          util.warn(
+            err_count,
+            "error(s) occurred while fetching docker data:",
+            err
+          )
+        end
+
+        self.locked = false
+        local i = {}
+        for _, item in ipairs(items) do
+          table.insert(i, item)
+        end
+        for _, item in ipairs(secondary_items) do
+          table.insert(i, item)
+        end
+        if callback then
+          callback(i)
+        end
+      end,
+    }
+    local env = self:get_env()
+    if env then
+      opts.env = env
+    end
+    if job_id then
+      pcall(vim.fn.jobstop, job_id)
+    end
+    job_id = vim.fn.jobstart(cmd, opts)
+    if not callback then
+      vim.fn.jobwait({ job_id }, 2000)
+    end
+    local i = {}
+    for _, item in ipairs(items) do
+      table.insert(i, item)
+    end
+    for _, item in ipairs(secondary_items) do
+      table.insert(i, item)
+    end
+    return i
+  end)
+  if not ok then
+    util.warn(all_items)
+    self.locked = false
+    return {}
+  end
+  return all_items
 end
 
 return State
