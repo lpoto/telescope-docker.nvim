@@ -1,5 +1,5 @@
-local setup = require "telescope._extensions.docker.setup"
-local State = require "telescope._extensions.docker.util.docker_state"
+local setup = require "telescope-docker.setup"
+local State = require "telescope-docker.util.docker_state"
 
 local health = {}
 
@@ -8,9 +8,9 @@ function health.check()
 
   if setup.called() then
     -- NOTE: ensure there were no errors during setup
-    local errors = setup.errors()
+    local errors = setup.get_errors()
     if #errors > 0 then
-      vim.health.warn("Setup has failed", errors)
+      vim.health.warn("Errors have occured during the setup", errors)
     else
       vim.health.ok "Setup has been successfully called"
     end
@@ -43,8 +43,22 @@ function health.check()
     return true
   end)
   if not ok and type(err) == "string" then
-    vim.health.error(err, {
+    vim.health.warn(err, {
       "Change the compose binary",
+    })
+  end
+  if type(warn) == "string" then
+    vim.health.warn(warn)
+  end
+
+  ok, err, warn = state:machine_binary(function(binary, version)
+    vim.health.ok("Executable machine binary: " .. vim.inspect(binary))
+    vim.health.ok("Machine version: " .. vim.inspect(version))
+    return true
+  end)
+  if not ok and type(err) == "string" then
+    vim.health.warn(err, {
+      "Change the machine binary",
     })
   end
   if type(warn) == "string" then

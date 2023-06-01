@@ -1,8 +1,8 @@
-local mappings = require "telescope._extensions.docker.files.mappings"
-local util = require "telescope._extensions.docker.util"
+local mappings = require "telescope-docker.files.mappings"
+local util = require "telescope-docker.util"
 local builtin = require "telescope.builtin"
 local action_state = require "telescope.actions.state"
-local State = require "telescope._extensions.docker.util.docker_state"
+local State = require "telescope-docker.util.docker_state"
 
 local get_result_processor
 local name = "Dockerfiles"
@@ -27,7 +27,8 @@ local dockerfiles_picker = function(options)
     }
   end
 
-  local docker_state, err = State:new(options.env)
+  local docker_state = State:new(options.env)
+  local _, err = docker_state:binary()
   if err ~= nil then
     util.error(err)
     return

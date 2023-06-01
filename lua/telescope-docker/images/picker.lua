@@ -1,8 +1,8 @@
-local util = require "telescope._extensions.docker.util"
-local finder = require "telescope._extensions.docker.images.finder"
-local previewer = require "telescope._extensions.docker.images.previewer"
-local mappings = require "telescope._extensions.docker.images.mappings"
-local State = require "telescope._extensions.docker.util.docker_state"
+local util = require "telescope-docker.util"
+local finder = require "telescope-docker.images.finder"
+local previewer = require "telescope-docker.images.previewer"
+local mappings = require "telescope-docker.images.mappings"
+local State = require "telescope-docker.util.docker_state"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
@@ -20,7 +20,13 @@ local available_images_telescope_picker = function(options)
   if options.host then
     env.DOCKER_HOST = options.host
   end
-  local docker_state, err = State:new(options.env)
+  local docker_state = State:new(options.env)
+  local _, err = docker_state:binary()
+  if err ~= nil then
+    util.error(err)
+    return
+  end
+
   if err ~= nil then
     util.error(err)
     return

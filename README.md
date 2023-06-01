@@ -32,6 +32,7 @@ require("telescope").setup {
       theme = "ivy",
       binary = "docker", -- in case you want to use podman or something
       compose_binary = "docker-compose",
+      machine_binary = "docker-machine",
       log_level = vim.log.levels.INFO,
       init_term = "tabnew", -- "vsplit new", "split new", ...
       -- NOTE: init_term may also be a function that receives
@@ -51,6 +52,7 @@ Then use the extension:
 ```lua
 :Telescope docker containers
 -- :Telescope docker images
+-- :Telescope docker machines
 -- :Telescope docker compose
 -- :Telescope docker files
 ```
@@ -60,6 +62,7 @@ or with lua:
 ```lua
 require("telescope").extensions.docker.containers(--[[opts...]])
 --require("telescope").extensions.docker.images(...)
+--require("telescope").extensions.docker.machines(...)
 --require("telescope").extensions.docker.compose(...)
 --require("telescope").extensions.docker.files(...)
 ```

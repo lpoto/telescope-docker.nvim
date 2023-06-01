@@ -1,13 +1,15 @@
-local actions = require "telescope._extensions.docker.compose.actions"
+local actions = require "telescope-docker.files.actions"
 local telescope_actions = require "telescope.actions"
 
 local mappings = {}
 
 mappings.keys = {
-  ["<CR>"] = actions.select_compose_file,
-  ["<C-a>"] = actions.select_compose_file,
-  ["<C-e>"] = actions.edit_compose_file,
-  ["e"] = actions.edit_compose_file,
+  ["<CR>"] = actions.build_from_input,
+  ["<C-a>"] = function(pb)
+    actions.build_from_input(pb, true)
+  end,
+  ["<C-e>"] = actions.edit_dockerfile,
+  ["e"] = actions.edit_dockerfile,
 }
 
 ---@param prompt_bufnr number

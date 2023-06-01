@@ -1,10 +1,10 @@
-local util = require "telescope._extensions.docker.util"
-local setup = require "telescope._extensions.docker.setup"
-local containers_picker =
-  require "telescope._extensions.docker.containers.picker"
-local images_picker = require "telescope._extensions.docker.images.picker"
-local compose_picker = require "telescope._extensions.docker.compose.picker"
-local dockerfiles_picker = require "telescope._extensions.docker.files.picker"
+local util = require "telescope-docker.util"
+local setup = require "telescope-docker.setup"
+local containers_picker = require "telescope-docker.containers.picker"
+local images_picker = require "telescope-docker.images.picker"
+local machines_picker = require "telescope-docker.machines.picker"
+local compose_picker = require "telescope-docker.compose.picker"
+local dockerfiles_picker = require "telescope-docker.files.picker"
 
 -- NOTE: ensure the telescope is loaded
 -- before registering the extension
@@ -30,6 +30,10 @@ local function images(opts)
   setup.call_with_opts(images_picker, opts or {})
 end
 
+local function machines(opts)
+  setup.call_with_opts(machines_picker, opts or {})
+end
+
 ---Opens the docker-compose picker and merges the provided opts
 ---with the default options provided during the setup.
 ---@param opts table|nil
@@ -51,5 +55,6 @@ return telescope.register_extension {
     images = images,
     compose = compose,
     files = files,
+    machines = machines,
   },
 }

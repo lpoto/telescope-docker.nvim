@@ -26,6 +26,18 @@ enum.IMAGES = {
   PUSH = "push",
 }
 
+enum.MACHINES = {
+  INSPECT = "inspect",
+  KILL = "kill",
+  REGENERATE_CERTS = "regenerate certs",
+  SSH = "ssh",
+  START = "start",
+  RESTART = "restart",
+  REMOVE = "remove",
+  STOP = "stop",
+  UPGRADE = "upgrade",
+}
+
 enum.DOCKERFILES = {
   BUILD = "build",
   CD_AND_BUILD = "cd & build",

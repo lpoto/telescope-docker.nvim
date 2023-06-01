@@ -1,15 +1,12 @@
-local actions = require "telescope._extensions.docker.files.actions"
+local actions = require "telescope-docker.images.actions"
 local telescope_actions = require "telescope.actions"
 
 local mappings = {}
 
 mappings.keys = {
-  ["<CR>"] = actions.build_from_input,
-  ["<C-a>"] = function(pb)
-    actions.build_from_input(pb, true)
-  end,
-  ["<C-e>"] = actions.edit_dockerfile,
-  ["e"] = actions.edit_dockerfile,
+  ["<CR>"] = actions.select_image,
+  ["<C-a>"] = actions.select_image,
+  ["<C-q>"] = function() end,
 }
 
 ---@param prompt_bufnr number
@@ -22,11 +19,7 @@ function mappings.attach_mappings(prompt_bufnr, map)
         f(prompt_bufnr)
       end)
     else
-      local modes = { "n" }
-      if key:sub(1, 1) == "<" then
-        table.insert(modes, "i")
-      end
-      for _, mode in ipairs(modes) do
+      for _, mode in ipairs { "n", "i" } do
         map(mode, key, function()
           f(prompt_bufnr)
         end)

@@ -1,6 +1,6 @@
 local action_state = require "telescope.actions.state"
-local util = require "telescope._extensions.docker.util"
-local setup = require "telescope._extensions.docker.setup"
+local util = require "telescope-docker.util"
+local setup = require "telescope-docker.setup"
 local telescope_actions = require "telescope.actions"
 
 local actions = {}

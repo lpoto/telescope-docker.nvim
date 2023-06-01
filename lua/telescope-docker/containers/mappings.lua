@@ -1,4 +1,4 @@
-local actions = require "telescope._extensions.docker.containers.actions"
+local actions = require "telescope-docker.containers.actions"
 local telescope_actions = require "telescope.actions"
 
 local mappings = {}
