@@ -54,6 +54,9 @@ function util.open_in_shell(command, init_term, opts)
       local buf = vim.api.nvim_get_current_buf()
       pcall(vim.api.nvim_buf_set_option, buf, "buftype", "nofile")
       pcall(vim.api.nvim_buf_set_option, buf, "bufhidden", "wipe")
+      if type(cmd) == "table" then
+        cmd = table.concat(cmd, " ")
+      end
       local job_id = vim.fn.termopen(cmd, o)
       vim.api.nvim_create_autocmd({ "BufUnload", "BufHidden" }, {
         buffer = buf,

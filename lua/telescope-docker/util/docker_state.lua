@@ -180,59 +180,73 @@ end
 ---
 ---@param opts DockerCommandOpts
 function State:docker_command(opts)
-  self:binary(function(binary, _)
-    opts = opts or {}
-    if type(opts.args) ~= "table" or not next(opts.args) then
-      util.warn("Invalid docker arguments: " .. vim.inspect(opts.args))
-      return
-    end
-    if self.locked then
-      util.warn "Docker state is locked, please wait a moment"
-      return
-    end
-    if opts.ask_for_input then
-      local input = vim.fn.input {
-        prompt = binary .. " " .. table.concat(opts.args, " ") .. " ",
-        default = "",
-        cancelreturn = false,
-      }
-      if type(input) ~= "string" then
-        return
-      end
-      for _, arg in ipairs(vim.split(input, " ")) do
-        if arg:len() > 0 then
-          table.insert(opts.args, arg)
-        end
-      end
-    end
-
-    self.locked = true
-    local ok, e = pcall(function()
-      if
-        vim.api.nvim_buf_get_option(0, "filetype")
-        == enum.TELESCOPE_PROMPT_FILETYPE
-      then
-        local bufnr = vim.api.nvim_get_current_buf()
-        pcall(telescope_actions.close, bufnr)
-      end
-
-      local cmd = { binary, unpack(opts.args) }
-      local o = { detach = false }
-      local env = self:get_env()
-      if env then
-        o.env = env
-      end
-      if type(opts.cwd) == "string" then
-        o.cwd = opts.cwd
-      end
-      local init_term = setup.get_option "init_term"
-      util.open_in_shell(cmd, init_term, o)
-    end)
-    if not ok then
-      util.warn("Failed to execute docker command:", e)
-    end
-    self.locked = false
+  return self:binary(function(binary, _)
+    return self:__docker_command(binary, opts)
   end)
+end
+
+---Execute a docker command with the provided arguments in
+---a new terminal window.
+---
+---@param opts DockerCommandOpts
+function State:docker_machine_command(opts)
+  return self:machine_binary(function(binary, _)
+    return self:__docker_command(binary, opts)
+  end)
+end
+
+function State:__docker_command(binary, opts)
+  opts = opts or {}
+  if type(opts.args) ~= "table" or not next(opts.args) then
+    util.warn("Invalid arguments: " .. vim.inspect(opts.args))
+    return
+  end
+  if self.locked then
+    util.warn "Docker state is locked, please wait a moment"
+    return
+  end
+  if opts.ask_for_input then
+    local input = vim.fn.input {
+      prompt = binary .. " " .. table.concat(opts.args, " ") .. " ",
+      default = "",
+      cancelreturn = false,
+    }
+    if type(input) ~= "string" then
+      return
+    end
+    for _, arg in ipairs(vim.split(input, " ")) do
+      if arg:len() > 0 then
+        table.insert(opts.args, arg)
+      end
+    end
+  end
+
+  self.locked = true
+  local ok, e = pcall(function()
+    if
+      vim.api.nvim_buf_get_option(0, "filetype")
+      == enum.TELESCOPE_PROMPT_FILETYPE
+    then
+      local bufnr = vim.api.nvim_get_current_buf()
+      pcall(telescope_actions.close, bufnr)
+    end
+
+    local cmd = { binary, unpack(opts.args) }
+    local o = { detach = false }
+    local env = self:get_env()
+    if env then
+      o.env = env
+    end
+    if type(opts.cwd) == "string" then
+      o.cwd = opts.cwd
+    end
+    local init_term = setup.get_option "init_term"
+    util.open_in_shell(cmd, init_term, o)
+  end)
+  if not ok then
+    util.warn("Failed to execute docker command:", e)
+  end
+  self.locked = false
 end
 
 ---@class DockerJobOpts
@@ -247,81 +261,94 @@ end
 ---
 ---@param opts DockerJobOpts
 function State:docker_job(opts)
-  self:binary(function(binary, _)
-    opts = opts or {}
-    if type(opts.args) ~= "table" or not next(opts.args) then
-      util.warn("Invalid docker arguments: " .. vim.inspect(opts.args))
-      return
-    end
-    if self.locked then
-      util.warn "Docker state is locked, please wait a moment"
-      return
-    end
-
-    if opts.ask_for_input then
-      local input = vim.fn.input {
-        prompt = binary .. " " .. table.concat(opts.args, " ") .. " ",
-        default = "",
-        cancelreturn = false,
-      }
-      if type(input) ~= "string" then
-        return
-      end
-      for _, arg in ipairs(vim.split(input, " ")) do
-        if arg:len() > 0 then
-          table.insert(opts.args, arg)
-        end
-      end
-    end
-
-    self.locked = true
-    local ok, e = pcall(function()
-      if type(opts.start_msg) == "string" then
-        util.info(opts.start_msg)
-      end
-      local cmd = {
-        binary,
-        unpack(opts.args),
-      }
-      local error = {}
-      local o = {
-        detach = false,
-        on_stderr = function(_, data)
-          for _, d in ipairs(data) do
-            if d:len() > 0 then
-              table.insert(error, d)
-            end
-          end
-        end,
-        on_exit = function(_, code)
-          self.locked = false
-          if code ~= 0 then
-            if #error > 0 then
-              util.warn(table.concat(error, "\n"))
-            else
-              util.warn("Docker job - exited with code: " .. vim.inspect(code))
-            end
-            return
-          end
-          if type(opts.callback) == "function" then
-            if type(opts.end_msg) == "string" then
-              util.info(opts.end_msg)
-            end
-            opts.callback(opts.item)
-          end
-        end,
-      }
-      local env = self:get_env()
-      if env then
-        o.env = env
-      end
-      vim.fn.jobstart(cmd, o)
-    end)
-    if not ok then
-      util.warn(e)
-      self.locked = false
-    end
+  return self:binary(function(binary, _)
+    return self:__docker_job(binary, opts)
   end)
+end
+
+---Execute an async docker machine command with the provided arguments.
+---
+---@param opts DockerJobOpts
+function State:docker_machine_job(opts)
+  return self:machine_binary(function(binary, _)
+    return self:__docker_job(binary, opts)
+  end)
+end
+
+function State:__docker_job(binary, opts)
+  opts = opts or {}
+  if type(opts.args) ~= "table" or not next(opts.args) then
+    util.warn("Invalid docker arguments: " .. vim.inspect(opts.args))
+    return
+  end
+  if self.locked then
+    util.warn "Docker state is locked, please wait a moment"
+    return
+  end
+
+  if opts.ask_for_input then
+    local input = vim.fn.input {
+      prompt = binary .. " " .. table.concat(opts.args, " ") .. " ",
+      default = "",
+      cancelreturn = false,
+    }
+    if type(input) ~= "string" then
+      return
+    end
+    for _, arg in ipairs(vim.split(input, " ")) do
+      if arg:len() > 0 then
+        table.insert(opts.args, arg)
+      end
+    end
+  end
+
+  self.locked = true
+  local ok, e = pcall(function()
+    if type(opts.start_msg) == "string" then
+      util.info(opts.start_msg)
+    end
+    local cmd = {
+      binary,
+      unpack(opts.args),
+    }
+    local error = {}
+    local o = {
+      detach = false,
+      on_stderr = function(_, data)
+        for _, d in ipairs(data) do
+          if d:len() > 0 then
+            table.insert(error, d)
+          end
+        end
+      end,
+      on_exit = function(_, code)
+        self.locked = false
+        if code ~= 0 then
+          if #error > 0 then
+            util.warn(table.concat(error, "\n"))
+          else
+            util.warn("Docker job - exited with code: " .. vim.inspect(code))
+          end
+          return
+        end
+        if type(opts.callback) == "function" then
+          if type(opts.end_msg) == "string" then
+            util.info(opts.end_msg)
+          end
+          opts.callback(opts.item)
+        end
+      end,
+    }
+    local env = self:get_env()
+    if env then
+      o.env = env
+    end
+    vim.fn.jobstart(cmd, o)
+  end)
+  if not ok then
+    util.warn(e)
+    self.locked = false
+  end
 end
 
 ---@param callback function?
