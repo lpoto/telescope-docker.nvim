@@ -12,7 +12,6 @@ local opts = {}
 ---@param o table
 function setup.setup(o)
   called = true
-  errors = {}
   if type(o) ~= "table" then
     local msg = "Telescope docker config should be a table!"
     table.insert(errors, msg)
@@ -42,7 +41,7 @@ function setup.setup(o)
     o.binary = nil
   elseif o.binary ~= nil then
     if vim.fn.executable(o.binary) == 0 then
-      local msg = "Docker binary must be executable"
+      local msg = "Docker binary is not executable: " .. vim.inspect(o.binary)
       table.insert(errors, msg)
       util.warn(msg)
       o.binary = nil
@@ -56,10 +55,26 @@ function setup.setup(o)
     o.compose_binary = nil
   elseif o.compose_binary ~= nil then
     if vim.fn.executable(o.compose_binary) == 0 then
-      local msg = "Compose binary must be executable"
+      local msg = "Compose binary is not executable: "
+        .. vim.inspect(o.compose_binary)
       table.insert(errors, msg)
       util.warn(msg)
       o.compose_binary = nil
+    end
+  end
+
+  if o.machine_binary ~= nil and type(o.machine_binary) ~= "string" then
+    local msg = "'machine_binary' should be string"
+    table.insert(errors, msg)
+    util.warn(msg)
+    o.machine_binary = nil
+  elseif o.machine_binary ~= nil then
+    if vim.fn.executable(o.machine_binary) == 0 then
+      local msg = "Machine binary is not executable: "
+        .. vim.inspect(o.machine_binary)
+      table.insert(errors, msg)
+      util.warn(msg)
+      o.machine_binary = nil
     end
   end
 
@@ -97,7 +112,7 @@ function setup.call_with_opts(callback, o)
 end
 
 ---@return string[]
-function setup.errors()
+function setup.get_errors()
   return errors
 end
 

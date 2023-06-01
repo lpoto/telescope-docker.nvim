@@ -30,7 +30,8 @@ local docker_compose_picker = function(options)
     }
   end
 
-  local docker_state, err = State:new(options.env)
+  local docker_state = State:new(options.env)
+  local _, err = docker_state:compose_binary()
   if err ~= nil then
     util.error(err)
     return

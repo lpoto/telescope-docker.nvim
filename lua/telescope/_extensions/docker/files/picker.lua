@@ -27,7 +27,8 @@ local dockerfiles_picker = function(options)
     }
   end
 
-  local docker_state, err = State:new(options.env)
+  local docker_state = State:new(options.env)
+  local _, err = docker_state:binary()
   if err ~= nil then
     util.error(err)
     return

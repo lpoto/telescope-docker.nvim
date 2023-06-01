@@ -16,6 +16,16 @@ local State = {
 }
 State.__index = State
 
+---@param env table?
+---@return State
+function State:new(env)
+  local o = setmetatable({}, State)
+  if type(env) == "table" and next(env) then
+    o.env = env
+  end
+  return o
+end
+
 ---@return any?: callback return values
 ---@return string?: Error
 function State:binary(callback)
@@ -23,6 +33,9 @@ function State:binary(callback)
     return nil, self.__cache.error
   end
   if self.__cache.binary and self.__cache.version then
+    if type(callback) ~= "function" then
+      return nil, nil
+    end
     return callback(self.__cache.binary, self.__cache.version), nil
   end
   local b = setup.get_option "binary"
@@ -30,17 +43,21 @@ function State:binary(callback)
     b = "docker"
   end
   if vim.fn.executable(b) ~= 1 then
-    self.__cache.error = "Docker binary not executable: " .. b
+    self.__cache.error = "Binary not executable: " .. b
     return nil, self.__cache.error
   end
   local version = self:__get_version(b)
   if type(version) ~= "string" then
-    self.__cache.error = "Failed to get docker version"
+    self.__cache.error = "Failed to get version for binary: " .. vim.inspect(b)
     return nil, self.__cache.error
   end
 
   self.__cache.binary = b
   self.__cache.version = version
+
+  if type(callback) ~= "function" then
+    return nil, nil
+  end
 
   return callback(b, version), nil
 end
@@ -53,8 +70,9 @@ function State:compose_binary(callback)
     return nil, self.__cache.compose_error
   end
   if self.__cache.compose_binary and self.__cache.compose_version then
-    return callback(self.__cache.compose_binary, self.__cache.compose_version),
-      nil
+    if type(callback) ~= "function" then
+      return nil, nil, self.__cache.compose_warning
+    end
   end
   local _, err = self:binary(function(binary, _)
     local b = setup.get_option "compose_binary"
@@ -62,13 +80,13 @@ function State:compose_binary(callback)
       b = "docker-compose"
     end
     if vim.fn.executable(b) ~= 1 then
-      self.__cache.compose_error = "Docker compose binary not executable: "
-        .. b
+      self.__cache.compose_error = "Compose binary not executable: " .. b
       return
     end
     local version, used_binary = self:__get_compose_version(b, binary)
     if type(version) ~= "string" then
-      self.__cache.compose_error = "Failed to get docker compose version"
+      self.__cache.compose_error = "Failed to get compose version for binary: "
+        .. vim.inspect(b)
       return
     end
     self.__cache.compose_binary = used_binary
@@ -86,19 +104,49 @@ function State:compose_binary(callback)
   if self.__cache.compose_error then
     return nil, self.__cache.compose_error, self.__cache.compose_warning
   end
+  if type(callback) ~= "function" then
+    return nil, nil, self.__cache.compose_warning
+  end
   return callback(self.__cache.compose_binary, self.__cache.compose_version),
     nil,
     self.__cache.compose_warning
 end
 
----@param env table?
----@return State
-function State:new(env)
-  local o = setmetatable({}, State)
-  if type(env) == "table" and next(env) then
-    o.env = env
+---@return any?: callback return values
+---@return string?: Error
+function State:machine_binary(callback)
+  if self.__cache.machine_error then
+    return nil, self.__cache.machine_error
   end
-  return o
+  if self.__cache.machine_binary and self.__cache.machine_version then
+    if type(callback) ~= "function" then
+      return nil, nil
+    end
+    return callback(self.__cache.machine_binary, self.__cache.machine_version),
+      nil
+  end
+  local b = setup.get_option "machine_binary"
+  if type(b) ~= "string" then
+    b = "docker-machine"
+  end
+  if vim.fn.executable(b) ~= 1 then
+    self.__cache.machine_error = "Machine binary not executable: " .. b
+    return nil, self.__cache.machine_error
+  end
+  local version = self:__get_machine_version(b)
+  if type(version) ~= "string" then
+    self.__cache.machine_error = "Failed to get machine version for binary: "
+      .. vim.inspect(b)
+    return nil, self.__cache.machine_error
+  end
+
+  self.__cache.machine_binary = b
+  self.__cache.machine_version = version
+
+  if type(callback) ~= "function" then
+    return nil, nil
+  end
+  return callback(b, version), nil
 end
 
 ---@param env table?
@@ -344,6 +392,16 @@ function State:__get_version(binary)
   local v = self:__version { binary, "--version" }
   if type(v) == "string" then
     if string.find(v:lower(), binary) == nil then
+      return nil
+    end
+  end
+  return v
+end
+
+function State:__get_machine_version(binary)
+  local v = self:__version { binary, "--version" }
+  if type(v) == "string" then
+    if string.find(v:lower(), "machine") == nil then
       return nil
     end
   end
