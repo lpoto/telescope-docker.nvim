@@ -1,8 +1,8 @@
-local util = require "telescope._extensions.docker.util"
-local finder = require "telescope._extensions.docker.containers.finder"
-local previewer = require "telescope._extensions.docker.containers.previewer"
-local mappings = require "telescope._extensions.docker.containers.mappings"
-local State = require "telescope._extensions.docker.util.docker_state"
+local util = require "telescope-docker.util"
+local finder = require "telescope-docker.containers.finder"
+local previewer = require "telescope-docker.containers.previewer"
+local mappings = require "telescope-docker.containers.mappings"
+local State = require "telescope-docker.util.docker_state"
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values

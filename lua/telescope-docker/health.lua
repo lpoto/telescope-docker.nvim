@@ -1,5 +1,5 @@
-local setup = require "telescope._extensions.docker.setup"
-local State = require "telescope._extensions.docker.util.docker_state"
+local setup = require "telescope-docker.setup"
+local State = require "telescope-docker.util.docker_state"
 
 local health = {}
 

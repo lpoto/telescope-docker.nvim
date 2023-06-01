@@ -1,4 +1,4 @@
-local util = require "telescope._extensions.docker.util"
+local util = require "telescope-docker.util"
 
 ---@class HighlightField
 ---@field name string

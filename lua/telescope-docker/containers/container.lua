@@ -1,4 +1,4 @@
-local Item = require "telescope._extensions.docker.util.item"
+local Item = require "telescope-docker.util.item"
 
 ---@class Container : Item
 ---@field ID string

@@ -1,9 +1,8 @@
-local enum = require "telescope._extensions.docker.enum"
-local util = require "telescope._extensions.docker.util"
-local setup = require "telescope._extensions.docker.setup"
-local popup = require "telescope._extensions.docker.util.popup"
+local enum = require "telescope-docker.enum"
+local util = require "telescope-docker.util"
+local popup = require "telescope-docker.util.popup"
 local action_state = require "telescope.actions.state"
-local finder = require "telescope._extensions.docker.containers.finder"
+local finder = require "telescope-docker.containers.finder"
 local telescope_actions = require "telescope.actions"
 
 local actions = {}

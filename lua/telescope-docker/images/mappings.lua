@@ -1,11 +1,11 @@
-local actions = require "telescope._extensions.docker.containers.actions"
+local actions = require "telescope-docker.images.actions"
 local telescope_actions = require "telescope.actions"
 
 local mappings = {}
 
 mappings.keys = {
-  ["<CR>"] = actions.select_container,
-  ["<C-a>"] = actions.select_container,
+  ["<CR>"] = actions.select_image,
+  ["<C-a>"] = actions.select_image,
   ["<C-q>"] = function() end,
 }
 

@@ -1,8 +1,8 @@
-local util = require "telescope._extensions.docker.util"
-local enum = require "telescope._extensions.docker.enum"
-local setup = require "telescope._extensions.docker.setup"
-local Container = require "telescope._extensions.docker.containers.container"
-local Image = require "telescope._extensions.docker.images.image"
+local util = require "telescope-docker.util"
+local enum = require "telescope-docker.enum"
+local setup = require "telescope-docker.setup"
+local Container = require "telescope-docker.containers.container"
+local Image = require "telescope-docker.images.image"
 local telescope_actions = require "telescope.actions"
 
 local job_id
