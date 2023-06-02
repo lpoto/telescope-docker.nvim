@@ -1,14 +1,14 @@
 local util = require "telescope-docker.util"
 local setup = require "telescope-docker.setup"
 local pickers = {
-  containers = require "telescope-docker.containers.picker",
-  images = require "telescope-docker.images.picker",
-  swarm = require "telescope-docker.swarm.picker",
-  machines = require "telescope-docker.machines.picker",
-  compose = require "telescope-docker.compose.picker",
-  files = require "telescope-docker.files.picker",
+  containers = require "telescope-docker.pickers.containers.picker",
+  images = require "telescope-docker.pickers.images.picker",
+  swarm = require "telescope-docker.pickers.swarm.picker",
+  machines = require "telescope-docker.pickers.machines.picker",
+  compose = require "telescope-docker.pickers.compose.picker",
+  files = require "telescope-docker.pickers.files.picker",
 }
-pickers.docker = require "telescope-docker.default.picker"(pickers)
+pickers.docker = require "telescope-docker.pickers.default.picker"(pickers)
 
 -- NOTE: ensure the telescope is loaded
 -- before registering the extension

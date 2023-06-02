@@ -1,5 +1,8 @@
 local setup = require "telescope-docker.setup"
-local State = require "telescope-docker.util.docker_state"
+local State = require "telescope-docker.core.docker_state"
+local ComposeState = require "telescope-docker.pickers.compose.docker_state"
+local DockerfilesState = require "telescope-docker.pickers.files.docker_state"
+local MachinesState = require "telescope-docker.pickers.machines.docker_state"
 
 local health = {}
 
@@ -37,7 +40,8 @@ function health.check()
     })
   end
 
-  ok, err, warn = state:compose_binary(function(binary, version)
+  state = ComposeState:new()
+  ok, err, warn = state:binary(function(binary, version)
     vim.health.ok("Executable compose binary: " .. vim.inspect(binary))
     if version ~= nil then
       vim.health.ok("Compose version: " .. vim.inspect(version))
@@ -53,7 +57,8 @@ function health.check()
     vim.health.warn(warn)
   end
 
-  ok, err, warn = state:buildx_binary(function(binary, version)
+  state = DockerfilesState:new()
+  ok, err, warn = state:binary(function(binary, version)
     vim.health.ok("Executable buildx binary: " .. vim.inspect(binary))
     if version ~= nil then
       vim.health.ok("Buildx version: " .. vim.inspect(version))
@@ -68,7 +73,8 @@ function health.check()
     vim.health.warn(warn)
   end
 
-  ok, err, warn = state:machine_binary(function(binary, version)
+  state = MachinesState:new()
+  ok, err, warn = state:binary(function(binary, version)
     vim.health.ok("Executable machine binary: " .. vim.inspect(binary))
     if version ~= nil then
       vim.health.ok("Machine version: " .. vim.inspect(version))
