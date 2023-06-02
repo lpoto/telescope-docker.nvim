@@ -6,6 +6,7 @@ that allows managing:
 - containers,
 - images,
 - networks,
+- volumes,
 - machines,
 - swarm nodes,
 - Dockerfiles and
@@ -66,6 +67,7 @@ Then use the extension:
 -- :Telescope docker containers
 -- :Telescope docker images
 -- :Telescope docker networks
+-- :Telescope docker volumes
 -- :Telescope docker swarm
 -- :Telescope docker machines
 -- :Telescope docker compose
