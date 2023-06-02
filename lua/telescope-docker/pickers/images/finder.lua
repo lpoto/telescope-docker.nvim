@@ -1,15 +1,13 @@
 local finders = require "telescope.finders"
 local entry_display = require "telescope.pickers.entry_display"
 
-local finder = {}
-
 local get_image_display
 
 ---Create a telescope finder for the currently available images.
 ---
 ---@param images_tbl Image[]
 ---@return table
-function finder.images_finder(images_tbl)
+local function images_finder(images_tbl)
   return finders.new_table {
     results = images_tbl,
     entry_maker = function(entry)
@@ -35,4 +33,4 @@ get_image_display = function(image)
   }
 end
 
-return finder
+return images_finder

@@ -1,5 +1,4 @@
-local setup = require "telescope-docker.setup"
-local telescope_utils = require "telescope-docker.util.telescope"
+local telescope_utils = require "telescope-docker.core.telescope_util"
 
 local actions = {}
 

@@ -1,15 +1,13 @@
 local finders = require "telescope.finders"
 local entry_display = require "telescope.pickers.entry_display"
 
-local finder = {}
-
 local get_node_display
 
 ---Create a telescope finder for the currently available nodes.
 ---
 ---@param nodes_tbl Node[]
 ---@return table
-function finder.nodes_finder(nodes_tbl)
+local function nodes_finder(nodes_tbl)
   return finders.new_table {
     results = nodes_tbl,
     entry_maker = function(entry)
@@ -43,4 +41,4 @@ get_node_display = function(node)
   }
 end
 
-return finder
+return nodes_finder

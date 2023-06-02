@@ -3,7 +3,7 @@ local util = require "telescope-docker.util"
 local popup = require "telescope-docker.util.popup"
 local action_state = require "telescope.actions.state"
 local finder = require "telescope-docker.pickers.containers.finder"
-local telescope_utils = require "telescope-docker.util.telescope"
+local telescope_utils = require "telescope-docker.core.telescope_util"
 
 local actions = {}
 
@@ -70,10 +70,7 @@ function actions.start(prompt_bufnr, ask_for_input)
         start_msg = "Starting container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " started",
         callback = function()
-          telescope_utils.refresh_picker(
-            prompt_bufnr,
-            finder.containers_finder
-          )
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -100,10 +97,7 @@ function actions.pause(prompt_bufnr, ask_for_input)
         start_msg = "Pausing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " paused",
         callback = function()
-          telescope_utils.refresh_picker(
-            prompt_bufnr,
-            finder.containers_finder
-          )
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -130,10 +124,7 @@ function actions.unpause(prompt_bufnr, ask_for_input)
         start_msg = "Unpausing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " unpaused",
         callback = function()
-          telescope_utils.refresh_picker(
-            prompt_bufnr,
-            finder.containers_finder
-          )
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -160,10 +151,7 @@ function actions.stop(prompt_bufnr, ask_for_input)
         start_msg = "Stopping container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " stopped",
         callback = function()
-          telescope_utils.refresh_picker(
-            prompt_bufnr,
-            finder.containers_finder
-          )
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -190,10 +178,7 @@ function actions.kill(prompt_bufnr, ask_for_input)
         start_msg = "Killing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " killed",
         callback = function()
-          telescope_utils.refresh_picker(
-            prompt_bufnr,
-            finder.containers_finder
-          )
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -220,10 +205,7 @@ function actions.delete(prompt_bufnr, ask_for_input)
         start_msg = "Removing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " removed",
         callback = function()
-          telescope_utils.refresh_picker(
-            prompt_bufnr,
-            finder.containers_finder
-          )
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -259,10 +241,7 @@ function actions.rename(prompt_bufnr, ask_for_input)
           start_msg = "Renaming container: " .. container.ID,
           end_msg = "Container " .. container.ID .. " renamed",
           callback = function()
-            telescope_utils.refresh_picker(
-              prompt_bufnr,
-              finder.containers_finder
-            )
+            telescope_utils.refresh_picker(prompt_bufnr, finder)
           end,
         }
       end)

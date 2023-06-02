@@ -1,7 +1,7 @@
 local enum = require "telescope-docker.enum"
 local popup = require "telescope-docker.util.popup"
 local finder = require "telescope-docker.pickers.networks.finder"
-local telescope_utils = require "telescope-docker.util.telescope"
+local telescope_utils = require "telescope-docker.core.telescope_util"
 
 local actions = {}
 
@@ -56,7 +56,7 @@ function actions.remove(prompt_bufnr, ask_for_input)
           .. ")",
         end_msg = "Network " .. network.Name .. " removed",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.networks_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -92,7 +92,7 @@ function actions.connect(prompt_bufnr, ask_for_input)
           .. "'",
         end_msg = "Container connected",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.networks_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -128,7 +128,7 @@ function actions.disconnect(prompt_bufnr, ask_for_input)
           .. "'",
         end_msg = "Container disconnected",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.networks_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end

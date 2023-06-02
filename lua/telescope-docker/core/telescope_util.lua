@@ -1,6 +1,7 @@
 local action_state = require "telescope.actions.state"
 local telescope_actions = require "telescope.actions"
 local util = require "telescope-docker.util"
+local previewers = require "telescope.previewers"
 
 local telescope_utils = {}
 
@@ -99,6 +100,20 @@ function telescope_utils.refresh_picker(prompt_bufnr, finder_fn)
       util.error(e)
     end
   end)
+end
+
+--- A previewer for Item.
+function telescope_utils.item_previewer(title)
+  return previewers.new {
+    title = title,
+    preview_fn = function(self, entry, status)
+      entry.value:display(status)
+      self.status = status
+      self.state = self.state or {}
+      self.state.winid = status.preview_win
+      self.state.bufnr = vim.api.nvim_win_get_buf(status.preview_win)
+    end,
+  }
 end
 
 return telescope_utils

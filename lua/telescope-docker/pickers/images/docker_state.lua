@@ -37,5 +37,4 @@ function ImagesState:fetch_items(callback)
   return images or {}
 end
 
-
 return ImagesState
