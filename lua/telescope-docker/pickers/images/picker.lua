@@ -6,6 +6,7 @@ local items_picker = require "telescope-docker.core.items_picker"
 return items_picker {
   name = "images",
   description = "Existing docker images",
+  priority = 99,
   item_name = "Image",
   finder_fn = finder,
   docker_state = State,

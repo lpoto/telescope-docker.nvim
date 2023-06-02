@@ -7,6 +7,7 @@ return items_picker {
   name = "networks",
   description = "Existing docker networks",
   item_name = "Network",
+  priority = 98,
   finder_fn = finder,
   docker_state = State,
   mappings_tbl = {

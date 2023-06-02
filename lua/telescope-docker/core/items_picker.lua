@@ -12,6 +12,7 @@ local conf = require("telescope.config").values
 ---@field finder_fn function
 ---@field docker_state State
 ---@field mappings_tbl table
+---@field priority number?
 ---@field condition function?
 
 ---@param o ItemsPickerOptions
@@ -23,6 +24,7 @@ local available_items_telescope_picker = function(o)
   local finder_fn = o.finder_fn
   local State = o.docker_state
   local mappings_tbl = o.mappings_tbl
+  local priority = o.priority
   local condition = o.condition
 
   local picker_fn = function(options)
@@ -80,6 +82,7 @@ local available_items_telescope_picker = function(o)
     picker_fn = picker_fn,
     name = name,
     description = description,
+    priority = priority,
     condition = condition or function()
       local _, err, warn = State:binary()
       return err, warn

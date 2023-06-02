@@ -7,6 +7,7 @@ return items_picker {
   name = "nodes",
   description = "Docker nodes in the current swarm",
   item_name = "Node",
+  previewer = 1,
   finder_fn = finder,
   docker_state = State,
   mappings_tbl = {
