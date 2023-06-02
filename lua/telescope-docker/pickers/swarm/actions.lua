@@ -1,9 +1,6 @@
 local enum = require "telescope-docker.enum"
-local util = require "telescope-docker.util"
 local popup = require "telescope-docker.util.popup"
-local action_state = require "telescope.actions.state"
 local finder = require "telescope-docker.pickers.swarm.finder"
-local telescope_actions = require "telescope.actions"
 local telescope_utils = require "telescope-docker.util.telescope"
 
 local actions = {}
@@ -56,7 +53,7 @@ function actions.update_node(prompt_bufnr, ask_for_input)
         start_msg = "Updating node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " updated",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
         end,
       }
     end
@@ -78,7 +75,7 @@ function actions.promote_node(prompt_bufnr, ask_for_input)
         start_msg = "Promoting node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " promoted",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
         end,
       }
     end
@@ -100,7 +97,7 @@ function actions.demote_node(prompt_bufnr, ask_for_input)
         start_msg = "Demoting node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " demoted",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
         end,
       }
     end
@@ -148,7 +145,7 @@ function actions.remove(prompt_bufnr, ask_for_input)
         start_msg = "Removing node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " removed",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
         end,
       }
     end
@@ -171,42 +168,6 @@ function select_node(prompt_bufnr, options)
       actions.list_tasks(prompt_bufnr, ask_for_input)
     elseif choice == enum.NODES.REMOVE then
       actions.remove(prompt_bufnr, ask_for_input)
-    end
-  end)
-end
-
----Asynchronously refresh the nodes picker.
----
----@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.refresh_picker(prompt_bufnr)
-  local picker = telescope_utils.get_picker(prompt_bufnr)
-  if not picker or not picker.docker_state then
-    return
-  end
-  picker.docker_state:fetch_nodes(function(nodes_tbl)
-    if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
-      prompt_bufnr = vim.api.nvim_get_current_buf()
-    end
-    local p = action_state.get_current_picker(prompt_bufnr)
-    if p == nil then
-      return
-    end
-    if not nodes_tbl or not next(nodes_tbl) then
-      util.warn "No nodes were found"
-      pcall(telescope_actions.close, prompt_bufnr)
-      return
-    end
-    local ok, nodes_finder = pcall(finder.nodes_finder, nodes_tbl)
-    if not ok then
-      util.error(nodes_finder)
-    end
-    if not nodes_finder then
-      return
-    end
-    local e
-    ok, e = pcall(p.refresh, p, nodes_finder)
-    if not ok and type(e) == "string" then
-      util.error(e)
     end
   end)
 end

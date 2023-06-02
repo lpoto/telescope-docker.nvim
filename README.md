@@ -1,7 +1,17 @@
 # Telescope docker
 
 `telescope-docker.nvim` is a [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) extension,
-that allows managing containers, images, machines, swarm nodes, dockerfiles and docker-compose files from a telescope prompt.
+that allows managing:
+
+- containers,
+- images,
+- networks,
+- machines,
+- swarm nodes,
+- Dockerfiles and
+- docker-compose files
+
+from a telescope prompt.
 
 https://github.com/lpoto/telescope-docker.nvim/assets/67372390/f3b9dddf-29e1-4b95-8248-77e1d1b41ef2
 
@@ -55,6 +65,7 @@ Then use the extension:
 :Telescope docker
 -- :Telescope docker containers
 -- :Telescope docker images
+-- :Telescope docker networks
 -- :Telescope docker swarm
 -- :Telescope docker machines
 -- :Telescope docker compose
@@ -66,11 +77,7 @@ or with lua:
 ```lua
 require("telescope").extensions.docker.docker(--[[opts...]])
 --require("telescope").extensions.docker.containers(...)
---require("telescope").extensions.docker.images(...)
---require("telescope").extensions.docker.swarm(...)
---require("telescope").extensions.docker.machines(...)
---require("telescope").extensions.docker.compose(...)
---require("telescope").extensions.docker.files(...)
+-- ...
 ```
 
 > NOTE: try `:checkhealth telescope-docker` if you encounter any issues.
@@ -116,4 +123,4 @@ vim.g.docker_env = {
 
 > In the example above, the containers would be then fetched
 > from the provided docker host.
-> The same works for fetching images.
+> The same works for all other pickers, except for dockerfiles and docker compose files.

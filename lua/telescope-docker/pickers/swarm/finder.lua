@@ -38,8 +38,8 @@ get_node_display = function(node)
 
   return displayer {
     { node.Status, hl },
-    { node.Hostname, "Comment" },
-    node.ID,
+    { node.Hostname },
+    { node.ID, "Comment" },
   }
 end
 

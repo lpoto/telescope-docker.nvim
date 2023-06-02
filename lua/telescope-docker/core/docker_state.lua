@@ -1,7 +1,6 @@
 local util = require "telescope-docker.util"
 local enum = require "telescope-docker.enum"
 local setup = require "telescope-docker.setup"
-local Node = require "telescope-docker.pickers.swarm.node"
 local telescope_actions = require "telescope.actions"
 
 ---@class State

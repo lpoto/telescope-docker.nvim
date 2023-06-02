@@ -1,9 +1,6 @@
 local enum = require "telescope-docker.enum"
-local util = require "telescope-docker.util"
 local popup = require "telescope-docker.util.popup"
-local action_state = require "telescope.actions.state"
 local finder = require "telescope-docker.pickers.images.finder"
-local telescope_actions = require "telescope.actions"
 local telescope_utils = require "telescope-docker.util.telescope"
 
 local actions = {}
@@ -21,18 +18,6 @@ function actions.select_image(prompt_bufnr)
     enum.IMAGES.RETAG,
     enum.IMAGES.PUSH,
   })
-end
-
----Close the telescope images picker.
----
----@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.close_picker(prompt_bufnr)
-  vim.schedule(function()
-    if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
-      prompt_bufnr = vim.api.nvim_get_current_buf()
-    end
-    pcall(telescope_actions.close, prompt_bufnr)
-  end)
 end
 
 ---@param prompt_bufnr number: The telescope prompt's buffer number
@@ -61,7 +46,7 @@ function actions.delete(prompt_bufnr, ask_for_input)
         start_msg = start_msg,
         end_msg = end_msg,
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.images_finder)
         end,
       }
     end
@@ -115,7 +100,7 @@ function actions.retag(prompt_bufnr, ask_for_input)
           start_msg = "Retagging image: " .. image.ID,
           end_msg = "Image " .. image.ID .. " retagged",
           callback = function()
-            actions.refresh_picker(prompt_bufnr)
+            telescope_utils.refresh_picker(prompt_bufnr, finder.images_finder)
           end,
         }
       end)
@@ -152,42 +137,6 @@ function select_image(prompt_bufnr, options)
       actions.retag(prompt_bufnr, ask_for_input)
     elseif choice == enum.IMAGES.PUSH then
       actions.push(prompt_bufnr, ask_for_input)
-    end
-  end)
-end
-
----Asynchronously refresh the images picker.
----
----@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.refresh_picker(prompt_bufnr)
-  local picker = telescope_utils.get_picker(prompt_bufnr)
-  if not picker or not picker.docker_state then
-    return
-  end
-  picker.docker_state:fetch_images(function(images_tbl)
-    if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
-      prompt_bufnr = vim.api.nvim_get_current_buf()
-    end
-    local p = action_state.get_current_picker(prompt_bufnr)
-    if p == nil then
-      return
-    end
-    if not images_tbl or not next(images_tbl) then
-      util.warn "No images were found"
-      pcall(telescope_actions.close, prompt_bufnr)
-      return
-    end
-    local ok, images_finder = pcall(finder.images_finder, images_tbl)
-    if not ok then
-      util.error(images_finder)
-    end
-    if not images_finder then
-      return
-    end
-    local e
-    ok, e = pcall(p.refresh, p, images_finder)
-    if not ok and type(e) == "string" then
-      util.error(e)
     end
   end)
 end

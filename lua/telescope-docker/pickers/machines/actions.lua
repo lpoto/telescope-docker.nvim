@@ -3,7 +3,6 @@ local util = require "telescope-docker.util"
 local popup = require "telescope-docker.util.popup"
 local finder = require "telescope-docker.pickers.machines.finder"
 local action_state = require "telescope.actions.state"
-local telescope_actions = require "telescope.actions"
 local telescope_utils = require "telescope-docker.util.telescope"
 
 local actions = {}
@@ -145,7 +144,7 @@ function actions.stop(prompt_bufnr, ask_for_input)
         start_msg = "Stopping machine: " .. machine.Name,
         end_msg = "Machine " .. machine.Name .. " stopped",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.machines_finder)
         end,
       }
     end
@@ -173,7 +172,7 @@ function actions.kill(prompt_bufnr, ask_for_input)
         start_msg = "Killing machine: " .. machine.Name,
         end_msg = "Machine " .. machine.Name .. " killed",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.machines_finder)
         end,
       }
     end
@@ -208,7 +207,7 @@ function actions.remove(prompt_bufnr, ask_for_input)
         start_msg = "Removing machine: " .. machine.Name,
         end_msg = "Machine " .. machine.Name .. " removed",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(prompt_bufnr, finder.machines_finder)
         end,
       }
     end
@@ -287,42 +286,6 @@ function select_machine(prompt_bufnr, options)
       actions.remove(prompt_bufnr, ask_for_input)
     elseif choice == enum.MACHINES.UPGRADE then
       actions.upgrade(prompt_bufnr, ask_for_input)
-    end
-  end)
-end
-
----Asynchronously refresh the machines picker.
----
----@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.refresh_picker(prompt_bufnr)
-  local picker = telescope_utils.get_picker(prompt_bufnr)
-  if not picker or not picker.docker_state then
-    return
-  end
-  picker.docker_state:fetch_machines(function(machines_tbl)
-    if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
-      prompt_bufnr = vim.api.nvim_get_current_buf()
-    end
-    local p = action_state.get_current_picker(prompt_bufnr)
-    if p == nil then
-      return
-    end
-    if not machines_tbl or not next(machines_tbl) then
-      util.warn "No machines were found"
-      pcall(telescope_actions.close, prompt_bufnr)
-      return
-    end
-    local ok, machines_finder = pcall(finder.machines_finder, machines_tbl)
-    if not ok then
-      util.error(machines_finder)
-    end
-    if not machines_finder then
-      return
-    end
-    local e
-    ok, e = pcall(p.refresh, p, machines_finder)
-    if not ok and type(e) == "string" then
-      util.error(e)
     end
   end)
 end

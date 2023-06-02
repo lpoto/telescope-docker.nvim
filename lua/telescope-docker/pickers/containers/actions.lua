@@ -3,7 +3,6 @@ local util = require "telescope-docker.util"
 local popup = require "telescope-docker.util.popup"
 local action_state = require "telescope.actions.state"
 local finder = require "telescope-docker.pickers.containers.finder"
-local telescope_actions = require "telescope.actions"
 local telescope_utils = require "telescope-docker.util.telescope"
 
 local actions = {}
@@ -71,7 +70,10 @@ function actions.start(prompt_bufnr, ask_for_input)
         start_msg = "Starting container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " started",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(
+            prompt_bufnr,
+            finder.containers_finder
+          )
         end,
       }
     end
@@ -98,7 +100,10 @@ function actions.pause(prompt_bufnr, ask_for_input)
         start_msg = "Pausing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " paused",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(
+            prompt_bufnr,
+            finder.containers_finder
+          )
         end,
       }
     end
@@ -125,7 +130,10 @@ function actions.unpause(prompt_bufnr, ask_for_input)
         start_msg = "Unpausing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " unpaused",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(
+            prompt_bufnr,
+            finder.containers_finder
+          )
         end,
       }
     end
@@ -152,7 +160,10 @@ function actions.stop(prompt_bufnr, ask_for_input)
         start_msg = "Stopping container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " stopped",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(
+            prompt_bufnr,
+            finder.containers_finder
+          )
         end,
       }
     end
@@ -179,7 +190,10 @@ function actions.kill(prompt_bufnr, ask_for_input)
         start_msg = "Killing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " killed",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(
+            prompt_bufnr,
+            finder.containers_finder
+          )
         end,
       }
     end
@@ -206,7 +220,10 @@ function actions.delete(prompt_bufnr, ask_for_input)
         start_msg = "Removing container: " .. container.ID,
         end_msg = "Container " .. container.ID .. " removed",
         callback = function()
-          actions.refresh_picker(prompt_bufnr)
+          telescope_utils.refresh_picker(
+            prompt_bufnr,
+            finder.containers_finder
+          )
         end,
       }
     end
@@ -242,7 +259,10 @@ function actions.rename(prompt_bufnr, ask_for_input)
           start_msg = "Renaming container: " .. container.ID,
           end_msg = "Container " .. container.ID .. " renamed",
           callback = function()
-            actions.refresh_picker(prompt_bufnr)
+            telescope_utils.refresh_picker(
+              prompt_bufnr,
+              finder.containers_finder
+            )
           end,
         }
       end)
@@ -341,55 +361,6 @@ function actions.exec(prompt_bufnr, ask_for_input)
       end)
     end
   )
-end
-
----Asynchronously refresh the containers picker.
----
----@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.refresh_picker(prompt_bufnr)
-  local picker = telescope_utils.get_picker(prompt_bufnr)
-  if not picker or not picker.docker_state then
-    return
-  end
-  picker.docker_state:fetch_containers(function(containers_tbl)
-    if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
-      prompt_bufnr = vim.api.nvim_get_current_buf()
-    end
-    local p = action_state.get_current_picker(prompt_bufnr)
-    if p == nil then
-      return
-    end
-    if not containers_tbl or not next(containers_tbl) then
-      util.warn "No containers were found"
-      pcall(telescope_actions.close, prompt_bufnr)
-      return
-    end
-    local ok, containers_finder =
-      pcall(finder.containers_finder, containers_tbl)
-    if not ok then
-      util.error(containers_finder)
-    end
-    if not containers_finder then
-      return
-    end
-    local e
-    ok, e = pcall(p.refresh, p, containers_finder)
-    if not ok and type(e) == "string" then
-      util.error(e)
-    end
-  end)
-end
-
----Close the telescope containers picker.
----
----@param prompt_bufnr number: The telescope prompt's buffer number
-function actions.close_picker(prompt_bufnr)
-  vim.schedule(function()
-    if prompt_bufnr == nil or not vim.api.nvim_buf_is_valid(prompt_bufnr) then
-      prompt_bufnr = vim.api.nvim_get_current_buf()
-    end
-    pcall(telescope_actions.close, prompt_bufnr)
-  end)
 end
 
 ---@param prompt_bufnr number
