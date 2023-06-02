@@ -38,6 +38,13 @@ enum.VOLUMES = {
   REMOVE = "remove",
 }
 
+enum.CONTEXTS = {
+  INSPECT = "inspect",
+  REMOVE = "remove",
+  USE = "use",
+  UPDATE = "update",
+}
+
 enum.NODES = {
   INSPECT = "inspect",
   PROMOTE = "promote",

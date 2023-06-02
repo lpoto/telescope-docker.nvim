@@ -9,6 +9,7 @@ local pickers = {
   files = require "telescope-docker.pickers.files.picker",
   networks = require "telescope-docker.pickers.networks.picker",
   volumes = require "telescope-docker.pickers.volumes.picker",
+  contexts = require "telescope-docker.pickers.contexts.picker",
 }
 pickers.docker = require "telescope-docker.pickers.default.picker"(pickers)
 
