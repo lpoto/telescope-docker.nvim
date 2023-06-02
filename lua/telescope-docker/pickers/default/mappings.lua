@@ -1,15 +1,11 @@
 local actions = require "telescope-docker.pickers.default.actions"
-local telescope_actions = require "telescope.actions"
+local telescope_utils = require "telescope-docker.util.telescope"
 
 local mappings = {}
 
----@param prompt_bufnr number
----@return boolean
-function mappings.attach_mappings(prompt_bufnr, _)
-  telescope_actions.select_default:replace(function()
-    actions.select_picker(prompt_bufnr)
-  end)
-  return true
-end
+mappings.attach_mappings = telescope_utils.get_attach_mappings_fn {
+  ["<CR>"] = actions.select_picker,
+  ["<C-q>"] = function() end,
+}
 
 return mappings
