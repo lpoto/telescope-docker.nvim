@@ -15,7 +15,7 @@ that allows managing:
 
 from a telescope prompt.
 
-https://github.com/lpoto/telescope-docker.nvim/assets/67372390/f3b9dddf-29e1-4b95-8248-77e1d1b41ef2
+https://github.com/lpoto/telescope-docker.nvim/assets/67372390/6e8832d9-c2db-41f7-a7b4-3665164a60fa
 
 **_NOTE_** _Docker commands may be selected with either `<CR>` or `<C-a>`, selecting with
 `<C-a>` allows adding additional arguments._
