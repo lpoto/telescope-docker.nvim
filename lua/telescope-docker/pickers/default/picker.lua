@@ -13,7 +13,7 @@ local function default_picker(options)
     util.warn "No pickers are available"
     return
   end
-  local ok, picker_finder = pcall(finder.pickers_finder, pickers_tbl)
+  local ok, picker_finder = pcall(finder, pickers_tbl)
   if not ok then
     util.error(picker_finder)
   end

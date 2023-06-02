@@ -1,8 +1,6 @@
 local finders = require "telescope.finders"
 local entry_display = require "telescope.pickers.entry_display"
 
-local finder = {}
-
 local get_network_display
 local max_name = 10
 
@@ -10,7 +8,7 @@ local max_name = 10
 ---
 ---@param networks_tbl Network[]
 ---@return table?: a telescope finder
-function finder.networks_finder(networks_tbl)
+local function networks_finder(networks_tbl)
   for _, network in ipairs(networks_tbl or {}) do
     if #network.Name + 3 > max_name then
       max_name = #network.Name + 3
@@ -45,4 +43,4 @@ get_network_display = function(network)
   }
 end
 
-return finder
+return networks_finder

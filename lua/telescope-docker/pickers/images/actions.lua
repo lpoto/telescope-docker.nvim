@@ -1,7 +1,7 @@
 local enum = require "telescope-docker.enum"
 local popup = require "telescope-docker.util.popup"
 local finder = require "telescope-docker.pickers.images.finder"
-local telescope_utils = require "telescope-docker.util.telescope"
+local telescope_utils = require "telescope-docker.core.telescope_util"
 
 local actions = {}
 
@@ -46,7 +46,7 @@ function actions.delete(prompt_bufnr, ask_for_input)
         start_msg = start_msg,
         end_msg = end_msg,
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.images_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -100,7 +100,7 @@ function actions.retag(prompt_bufnr, ask_for_input)
           start_msg = "Retagging image: " .. image.ID,
           end_msg = "Image " .. image.ID .. " retagged",
           callback = function()
-            telescope_utils.refresh_picker(prompt_bufnr, finder.images_finder)
+            telescope_utils.refresh_picker(prompt_bufnr, finder)
           end,
         }
       end)

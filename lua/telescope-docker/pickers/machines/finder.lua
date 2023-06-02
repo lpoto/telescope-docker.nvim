@@ -1,15 +1,13 @@
 local finders = require "telescope.finders"
 local entry_display = require "telescope.pickers.entry_display"
 
-local finder = {}
-
 local get_machine_display
 
 ---Create a telescope finder for the currently available machines.
 ---
 ---@param machines_tbl Machine[]
 ---@return table?: a telescope finder
-function finder.machines_finder(machines_tbl)
+local function machines_finder(machines_tbl)
   return finders.new_table {
     results = machines_tbl,
     entry_maker = function(entry)
@@ -45,4 +43,4 @@ get_machine_display = function(machine)
   }
 end
 
-return finder
+return machines_finder

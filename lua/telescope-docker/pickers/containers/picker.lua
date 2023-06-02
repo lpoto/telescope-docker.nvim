@@ -1,71 +1,17 @@
-local util = require "telescope-docker.util"
 local finder = require "telescope-docker.pickers.containers.finder"
-local previewer = require "telescope-docker.pickers.containers.previewer"
-local mappings = require "telescope-docker.pickers.containers.mappings"
+local actions = require "telescope-docker.pickers.containers.actions"
 local State = require "telescope-docker.pickers.containers.docker_state"
-local DockerPicker = require "telescope-docker.core.docker_picker"
+local items_picker = require "telescope-docker.core.items_picker"
 
-local pickers = require "telescope.pickers"
-local conf = require("telescope.config").values
-
-local available_containers_telescope_picker = function(options)
-  util.info "Fetching containers ..."
-
-  options = options or {}
-
-  if options.env ~= nil and type(options.env) ~= "table" then
-    util.warn "env must be a table"
-    return
-  end
-  options.env = options.env or {}
-  if options.host ~= nil and type(options.host) ~= "string" then
-    util.warn "host must be a string"
-    return
-  end
-
-  if options.host then
-    options.env.DOCKER_HOST = options.host
-  end
-  local docker_state = State:new(options.env)
-
-  docker_state:fetch_items(function(containers_tbl)
-    containers_tbl = containers_tbl or {}
-    if not next(containers_tbl) then
-      util.warn "No containers were found"
-      return
-    end
-    local ok, containers_finder =
-      pcall(finder.containers_finder, containers_tbl)
-    if not ok then
-      util.error(containers_finder)
-    end
-    if not containers_finder then
-      return
-    end
-
-    local picker = pickers.new(options, {
-      prompt_title = "Containers",
-      finder = containers_finder,
-      sorter = conf.generic_sorter(options),
-      previewer = previewer.container_previewer(),
-      dynamic_preview_title = true,
-      selection_strategy = "row",
-      scroll_strategy = "cycle",
-      attach_mappings = mappings.attach_mappings,
-    })
-
-    picker.docker_state = docker_state
-
-    picker:find()
-  end)
-end
-
-return DockerPicker:new {
-  picker_fn = available_containers_telescope_picker,
+return items_picker {
   name = "containers",
   description = "Existing docker containers",
-  condition = function()
-    local _, err = State:binary()
-    return err
-  end,
+  item_name = "Container",
+  finder_fn = finder,
+  docker_state = State,
+  mappings_tbl = {
+    ["<CR>"] = actions.select_container,
+    ["<C-a>"] = actions.select_container,
+    ["<C-q>"] = function() end,
+  },
 }

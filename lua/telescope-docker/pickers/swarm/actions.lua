@@ -1,7 +1,7 @@
 local enum = require "telescope-docker.enum"
 local popup = require "telescope-docker.util.popup"
 local finder = require "telescope-docker.pickers.swarm.finder"
-local telescope_utils = require "telescope-docker.util.telescope"
+local telescope_utils = require "telescope-docker.core.telescope_util"
 
 local actions = {}
 
@@ -53,7 +53,7 @@ function actions.update_node(prompt_bufnr, ask_for_input)
         start_msg = "Updating node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " updated",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -75,7 +75,7 @@ function actions.promote_node(prompt_bufnr, ask_for_input)
         start_msg = "Promoting node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " promoted",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -97,7 +97,7 @@ function actions.demote_node(prompt_bufnr, ask_for_input)
         start_msg = "Demoting node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " demoted",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -145,7 +145,7 @@ function actions.remove(prompt_bufnr, ask_for_input)
         start_msg = "Removing node: " .. node.ID,
         end_msg = "Node " .. node.ID .. " removed",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.nodes_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end

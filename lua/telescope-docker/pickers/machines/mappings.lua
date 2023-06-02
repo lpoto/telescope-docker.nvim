@@ -1,5 +1,5 @@
 local actions = require "telescope-docker.pickers.machines.actions"
-local telescope_utils = require "telescope-docker.util.telescope"
+local telescope_utils = require "telescope-docker.core.telescope_util"
 
 local mappings = {}
 

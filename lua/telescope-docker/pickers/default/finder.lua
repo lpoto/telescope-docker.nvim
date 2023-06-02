@@ -1,8 +1,6 @@
 local finders = require "telescope.finders"
 local entry_display = require "telescope.pickers.entry_display"
 
-local finder = {}
-
 local get_picker_display
 local max_w = 10
 local max_desc_w = 10
@@ -11,7 +9,7 @@ local max_desc_w = 10
 ---
 ---@param pickers_tbl DockerPicker[]
 ---@return table
-function finder.pickers_finder(pickers_tbl)
+local function pickers_finder(pickers_tbl)
   for _, p in pairs(pickers_tbl) do
     if #p.name + 3 > max_w then
       max_w = #p.name + 3
@@ -61,4 +59,4 @@ get_picker_display = function(picker)
   return displayer(displays)
 end
 
-return finder
+return pickers_finder

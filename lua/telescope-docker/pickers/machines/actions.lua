@@ -3,7 +3,7 @@ local util = require "telescope-docker.util"
 local popup = require "telescope-docker.util.popup"
 local finder = require "telescope-docker.pickers.machines.finder"
 local action_state = require "telescope.actions.state"
-local telescope_utils = require "telescope-docker.util.telescope"
+local telescope_utils = require "telescope-docker.core.telescope_util"
 
 local actions = {}
 
@@ -144,7 +144,7 @@ function actions.stop(prompt_bufnr, ask_for_input)
         start_msg = "Stopping machine: " .. machine.Name,
         end_msg = "Machine " .. machine.Name .. " stopped",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.machines_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -172,7 +172,7 @@ function actions.kill(prompt_bufnr, ask_for_input)
         start_msg = "Killing machine: " .. machine.Name,
         end_msg = "Machine " .. machine.Name .. " killed",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.machines_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end
@@ -207,7 +207,7 @@ function actions.remove(prompt_bufnr, ask_for_input)
         start_msg = "Removing machine: " .. machine.Name,
         end_msg = "Machine " .. machine.Name .. " removed",
         callback = function()
-          telescope_utils.refresh_picker(prompt_bufnr, finder.machines_finder)
+          telescope_utils.refresh_picker(prompt_bufnr, finder)
         end,
       }
     end

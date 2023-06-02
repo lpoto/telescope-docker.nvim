@@ -33,6 +33,11 @@ enum.NETWORKS = {
   DISCONNECT = "disconnect",
 }
 
+enum.VOLUMES = {
+  INSPECT = "inspect",
+  REMOVE = "remove",
+}
+
 enum.NODES = {
   INSPECT = "inspect",
   PROMOTE = "promote",

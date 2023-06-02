@@ -33,5 +33,4 @@ function ContainersState:fetch_items(callback)
   return containers or {}
 end
 
-
 return ContainersState
