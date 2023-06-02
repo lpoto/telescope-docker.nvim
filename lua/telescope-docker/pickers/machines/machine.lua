@@ -42,7 +42,7 @@ Machine.fields = {
   { name = "ActiveSwarm", key_hl = "Conditional", value_hl = "String" },
   { name = "DockerVersion", key_hl = "Conditional", value_hl = "String" },
   { name = "ResponseTime", key_hl = "Conditional", value_hl = "String" },
-  { name = "Error", key_hl = "Conditional", value_hl = "String" },
+  { name = "Error", key_hl = "Conditional", value_hl = "Error" },
 }
 
 return Machine
