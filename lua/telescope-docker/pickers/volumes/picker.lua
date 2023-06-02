@@ -7,6 +7,7 @@ return items_picker {
   name = "volumes",
   description = "Existing docker volumes",
   item_name = "Volume",
+  priority = 97,
   finder_fn = finder,
   docker_state = State,
   mappings_tbl = {

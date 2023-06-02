@@ -5,6 +5,7 @@ local util = require "telescope-docker.util"
 ---@field picker_fn function
 ---@field name string
 ---@field description string
+---@field priority number
 ---@field condition function?
 local DockerPicker = {}
 DockerPicker.__index = DockerPicker
@@ -12,6 +13,10 @@ DockerPicker.__index = DockerPicker
 ---@param opts table
 ---@return DockerPicker
 function DockerPicker:new(opts)
+  opts = opts or {}
+  if type(opts.priority) ~= "number" then
+    opts.priority = 10
+  end
   return setmetatable(opts, self)
 end
 

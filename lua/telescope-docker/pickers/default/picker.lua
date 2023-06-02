@@ -42,6 +42,11 @@ return function(all_pickers)
     table.insert(pickers_tbl, p)
   end
   table.sort(pickers_tbl, function(a, b)
+    local a_priority = a.priority or 0
+    local b_priority = b.priority or 0
+    if a_priority ~= b_priority then
+      return a_priority > b_priority
+    end
     local a_1 = string.sub(a.name, 1, 1)
     local b_1 = string.sub(b.name, 1, 1)
     if a_1 == b_1 then
