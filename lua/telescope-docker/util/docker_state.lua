@@ -148,7 +148,9 @@ function State:plugin_binary(
         State.__cache[name .. "_binary"] = bin
         State.__cache[name .. "_version"] = version
         if default_bin_used then
-          warn = "Failed to get version for '"
+          warn = "Failed to get '"
+            .. name
+            .. "' version with '"
             .. binary
             .. "', falling back to '"
             .. bin
@@ -166,7 +168,11 @@ function State:plugin_binary(
       State.__cache[name .. "_binary"] = bin
       return
     else
-      State.__cache[name .. "_error"] = "Failed to get version for '"
+      State.__cache[name .. "_error"] = "Failed to get '"
+        .. name
+        .. "' version with '"
+        .. binary
+        .. "' and '"
         .. bin
         .. "'"
     end
