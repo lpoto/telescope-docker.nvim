@@ -26,6 +26,13 @@ enum.IMAGES = {
   PUSH = "push",
 }
 
+enum.NETWORKS = {
+  INSPECT = "inspect",
+  REMOVE = "remove",
+  CONNECT = "connect",
+  DISCONNECT = "disconnect",
+}
+
 enum.NODES = {
   INSPECT = "inspect",
   PROMOTE = "promote",
