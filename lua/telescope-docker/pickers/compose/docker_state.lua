@@ -16,10 +16,7 @@ end
 function ComposeState:binary(callback)
   local b, v, e, w = self:plugin_binary(
     "compose",
-    "docker-compose",
-    "compose",
     false,
-    "--version",
     "Install 'docker-compose' to manage docker compose files"
   )
   local r = nil

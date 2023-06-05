@@ -22,6 +22,7 @@ end
 
 local __binary
 local __plugin_binary
+local __ext_command_binary
 local __get_version
 local __get_plugin_version
 
@@ -92,22 +93,12 @@ function State:docker_job(opts)
   end)
 end
 
-function State:plugin_binary(
-  name,
-  default_binary,
-  fall_back,
-  builtin_fallback,
-  version_string,
-  default_warn
-)
-  return __plugin_binary(
-    name,
-    default_binary,
-    fall_back,
-    builtin_fallback,
-    version_string,
-    default_warn
-  )
+function State:plugin_binary(name, builtin_fallback, default_warn)
+  return __plugin_binary(name, builtin_fallback, default_warn)
+end
+
+function State:ext_command_binary(name, default_binary)
+  return __ext_command_binary(name, default_binary)
 end
 
 ---@param callback function?
@@ -143,8 +134,8 @@ function State:__docker_command(binary, opts)
 
   local ok, e = pcall(function()
     if
-      vim.api.nvim_buf_get_option(0, "filetype")
-      == enum.TELESCOPE_PROMPT_FILETYPE
+        vim.api.nvim_buf_get_option(0, "filetype")
+        == enum.TELESCOPE_PROMPT_FILETYPE
     then
       local bufnr = vim.api.nvim_get_current_buf()
       pcall(telescope_actions.close, bufnr)
@@ -251,14 +242,7 @@ function State:__docker_job(binary, opts)
   return jid
 end
 
-function __plugin_binary(
-  name,
-  default_binary,
-  fall_back,
-  builtin_fallback,
-  version_string,
-  default_warn
-)
+function __plugin_binary(name, builtin_fallback, default_warn)
   local err = State.__cache[name .. "_error"]
   local warn = State.__cache[name .. "_warning"]
   if err then
@@ -269,53 +253,56 @@ function __plugin_binary(
   if type(bin) == "string" then
     return bin, version, nil, warn
   end
-  local default_bin_used = true
   local binary = setup.get_option(name .. "_binary")
-  if type(binary) ~= "string" then
-    binary = default_binary
-    default_bin_used = false
-  end
-  version = __get_plugin_version(name, binary, version_string)
-  if type(version) == "string" then
-    State.__cache[name .. "_binary"] = binary
-    State.__cache[name .. "_version"] = version
-    return binary, version, nil, warn
+  if type(binary) == "string" then
+    version = __get_plugin_version(name, binary)
+    if type(version) == "string" then
+      State.__cache[name .. "_binary"] = binary
+      State.__cache[name .. "_version"] = version
+      return binary, version, nil, warn
+    end
   end
   _, err = __binary(function(b)
-    if type(fall_back) == "string" then
-      bin = b .. " " .. fall_back
-      version = __get_plugin_version(name, bin, version_string)
-      if type(version) == "string" then
-        State.__cache[name .. "_binary"] = bin
-        State.__cache[name .. "_version"] = version
-        if default_bin_used then
-          warn = "Failed to get '"
+    bin = b .. " " .. name
+    version = __get_plugin_version(name, bin)
+    if type(version) == "string" then
+      State.__cache[name .. "_binary"] = bin
+      State.__cache[name .. "_version"] = version
+      if type(binary) == "string" then
+        warn = "Failed to get '"
             .. name
             .. "' version with '"
             .. binary
             .. "', falling back to '"
             .. bin
             .. "'"
-          State.__cache[name .. "_warning"] = warn
-        end
-        return
-      elseif type(default_warn) == "string" then
-        warn = default_warn
         State.__cache[name .. "_warning"] = warn
       end
+      return
+    elseif type(default_warn) == "string" then
+      warn = default_warn
+      State.__cache[name .. "_warning"] = warn
     end
     if builtin_fallback then
       bin = b
       State.__cache[name .. "_binary"] = bin
       return
     else
-      State.__cache[name .. "_error"] = "Failed to get '"
-        .. name
-        .. "' version with '"
-        .. binary
-        .. "' and '"
-        .. bin
-        .. "'"
+      if type(binary) == "string" then
+        State.__cache[name .. "_error"] = "Failed to get '"
+            .. name
+            .. "' version with '"
+            .. binary
+            .. "' and '"
+            .. bin
+            .. "'"
+      else
+        State.__cache[name .. "_error"] = "Failed to get '"
+            .. name
+            .. "' version with '"
+            .. bin
+            .. "'"
+      end
     end
   end)
   if err == nil then
@@ -330,6 +317,36 @@ function __plugin_binary(
   return binary, version, err, warn
 end
 
+function __ext_command_binary(name, default_command)
+  local err = State.__cache[name .. "_ext_error"]
+  if err then
+    return nil, nil, err, warn
+  end
+  local bin = State.__cache[name .. "_ext_binary"]
+  local version = State.__cache[name .. "_ext_version"]
+  if type(bin) == "string" then
+    return bin, version, nil
+  end
+  local binary = setup.get_option(name .. "_ext_binary")
+  if type(binary) ~= "string" then
+    binary = default_command
+  end
+  if type(binary) == "string" then
+    version = __get_plugin_version(name, binary)
+    if type(version) == "string" then
+      State.__cache[name .. "_ext_binary"] = binary
+      State.__cache[name .. "_ext_version"] = version
+      return binary, version, nil
+    end
+  end
+  err = "Failed to get '" .. name .. "' version"
+  if type(binary) == "string" then
+    err = err .. " with '" .. binary .. "'"
+  end
+  State.__cache[name .. "_ext_error"] = err
+  return nil, nil, err
+end
+
 local __version
 function __get_version(binary)
   local v = __version { binary, "--version" }
@@ -341,8 +358,8 @@ function __get_version(binary)
   return v
 end
 
-function __get_plugin_version(name, binary, version_string)
-  local v = __version(binary .. " " .. version_string)
+function __get_plugin_version(name, binary)
+  local v = __version(binary .. " version")
   if type(v) == "string" then
     if string.find(v:lower(), name) == nil then
       return nil
@@ -398,7 +415,7 @@ function __binary(callback)
   local version = __get_version(b)
   if type(version) ~= "string" then
     State.__cache.error = "Failed to get version for docker binary: "
-      .. vim.inspect(b)
+        .. vim.inspect(b)
     return nil, State.__cache.error
   end
 
