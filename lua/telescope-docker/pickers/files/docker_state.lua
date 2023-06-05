@@ -13,10 +13,7 @@ end
 function DockerfilesState:binary(callback)
   local b, v, err, warn = self:plugin_binary(
     "buildx",
-    "docker-buildx",
-    "buildx",
     true,
-    "version",
     "Install 'buildx' to build images with buildkit"
   )
   if type(b) == "string" and type(callback) == "function" then

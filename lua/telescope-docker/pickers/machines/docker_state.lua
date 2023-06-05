@@ -78,19 +78,12 @@ end
 ---@return string?: Error
 ---@return string?: Warning
 function MachinesState:binary(callback)
-  local b, v, e, w = self:plugin_binary(
-    "machine",
-    "docker-machine",
-    "machine",
-    false,
-    "--version",
-    "Install 'docker-machine' to manage docker machines"
-  )
+  local b, v, e = self:ext_command_binary("machine", "docker-machine")
   local r = nil
   if b ~= nil and type(callback) == "function" then
     r = callback(b, v)
   end
-  return r, e, w
+  return r, e
 end
 
 return MachinesState

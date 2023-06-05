@@ -20,9 +20,9 @@ function setup.setup(o)
   end
 
   if
-    o.init_term ~= nil
-    and type(o.init_term) ~= "function"
-    and type(o.init_term) ~= "string"
+      o.init_term ~= nil
+      and type(o.init_term) ~= "function"
+      and type(o.init_term) ~= "string"
   then
     util.warn "'init_term' should be a string or a function"
     o.init_term = nil
@@ -39,13 +39,6 @@ function setup.setup(o)
     table.insert(errors, msg)
     util.warn(msg)
     o.binary = nil
-  elseif o.binary ~= nil then
-    if vim.fn.executable(o.binary) == 0 then
-      local msg = "Docker binary is not executable: " .. vim.inspect(o.binary)
-      table.insert(errors, msg)
-      util.warn(msg)
-      o.binary = nil
-    end
   end
 
   if o.compose_binary ~= nil and type(o.compose_binary) ~= "string" then
@@ -53,14 +46,6 @@ function setup.setup(o)
     table.insert(errors, msg)
     util.warn(msg)
     o.compose_binary = nil
-  elseif o.compose_binary ~= nil then
-    if vim.fn.executable(o.compose_binary) == 0 then
-      local msg = "Compose binary is not executable: "
-        .. vim.inspect(o.compose_binary)
-      table.insert(errors, msg)
-      util.warn(msg)
-      o.compose_binary = nil
-    end
   end
 
   if o.buildx_binary ~= nil and type(o.buildx_binary) ~= "string" then
@@ -68,14 +53,6 @@ function setup.setup(o)
     table.insert(errors, msg)
     util.warn(msg)
     o.buildx_binary = nil
-  elseif o.buildx_binary ~= nil then
-    if vim.fn.executable(o.buildx_binary) == 0 then
-      local msg = "Buildx binary is not executable: "
-        .. vim.inspect(o.buildx_binary)
-      table.insert(errors, msg)
-      util.warn(msg)
-      o.buildx_binary = nil
-    end
   end
 
   if o.machine_binary ~= nil and type(o.machine_binary) ~= "string" then
@@ -83,14 +60,6 @@ function setup.setup(o)
     table.insert(errors, msg)
     util.warn(msg)
     o.machine_binary = nil
-  elseif o.machine_binary ~= nil then
-    if vim.fn.executable(o.machine_binary) == 0 then
-      local msg = "Machine binary is not executable: "
-        .. vim.inspect(o.machine_binary)
-      table.insert(errors, msg)
-      util.warn(msg)
-      o.machine_binary = nil
-    end
   end
 
   if type(o.theme) == "string" then
